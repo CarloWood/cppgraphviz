@@ -1,5 +1,3 @@
-#include(AICxxProject)
-
 add_library(dot_ObjLib OBJECT)
 
 target_sources(dot_ObjLib
@@ -23,9 +21,6 @@ target_sources(dot_ObjLib
     Item.hpp
     item_types.hpp
 )
-
-# Compile with -fPIC.
-set_target_properties(dot_ObjLib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Required include search-paths.
 get_target_property(CWDS_INTERFACE_INCLUDE_DIRECTORIES AICxx::cwds INTERFACE_INCLUDE_DIRECTORIES)
