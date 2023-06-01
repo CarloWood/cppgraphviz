@@ -1,0 +1,12 @@
+#pragma once
+
+namespace config {
+
+// CPPGRAPHVIZ_USE_WHAT
+//
+// Extend the API to allow passing a string literal to constructors
+// to set the "what" attribute on the associated dot item.
+
+#cmakedefine CPPGRAPHVIZ_USE_WHAT 1
+
+} // namespace config
