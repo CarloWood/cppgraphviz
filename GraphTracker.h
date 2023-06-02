@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ItemTracker.hpp"
-#include "dot/Graph.hpp"
+#include "ItemTracker.h"
+#include "dot/Graph.h"
 #include <memory>
 
 namespace cppgraphviz {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ItemTracker.hpp"
-#include "dot/Node.hpp"
+#include "ItemTracker.h"
+#include "dot/Node.h"
 #include <utils/Badge.h>
 #include <memory>
 

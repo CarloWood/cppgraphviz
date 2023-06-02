@@ -1,7 +1,7 @@
 #include "sys.h"
-#include "Edge.hpp"
-#include "Node.hpp"
-#include "Graph.hpp"
+#include "Edge.h"
+#include "Node.h"
+#include "Graph.h"
 
 namespace cppgraphviz::dot {
 

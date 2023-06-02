@@ -1,9 +1,9 @@
 #pragma once
 
-#include "DotID.hpp"
-#include "Node.hpp"
-#include "Edge.hpp"
-#include "TableNode.hpp"
+#include "DotID.h"
+#include "Node.h"
+#include "Edge.h"
+#include "TableNode.h"
 #include <utils/iomanip.h>
 #include <string>
 #include <map>

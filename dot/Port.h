@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ItemPtr.hpp"
-#include "DotID.hpp"
-#include "Node.hpp"
+#include "ItemPtr.h"
+#include "DotID.h"
+#include "Node.h"
 #include <optional>
 #include <iosfwd>
 

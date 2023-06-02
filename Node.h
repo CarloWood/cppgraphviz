@@ -1,11 +1,11 @@
 #pragma once
 
-#include "NodeTracker.hpp"
-#include "Item.hpp"
-#include "Graph.hpp"
+#include "NodeTracker.h"
+#include "Item.h"
+#include "Graph.h"
 #include <boost/intrusive_ptr.hpp>
 #ifdef CWDEBUG
-#include "debug_ostream_operators.hpp"
+#include "debug_ostream_operators.h"
 #endif
 
 namespace cppgraphviz {

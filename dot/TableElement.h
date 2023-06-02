@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DotID.hpp"
-#include "Node.hpp"
+#include "DotID.h"
+#include "Node.h"
 #include <vector>
 #include <string>
 #include <functional>

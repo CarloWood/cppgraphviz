@@ -1,13 +1,13 @@
 #pragma once
 
-#include "MemoryRegionOwner.hpp"
-#include "GraphTracker.hpp"
-#include "NodeTracker.hpp"
-#include "Item.hpp"
+#include "MemoryRegionOwner.h"
+#include "GraphTracker.h"
+#include "NodeTracker.h"
+#include "Item.h"
 #include <vector>
 #include <memory>
 #ifdef CWDEBUG
-#include "debug_ostream_operators.hpp"
+#include "debug_ostream_operators.h"
 #include "utils/has_print_on.h"
 #endif
 

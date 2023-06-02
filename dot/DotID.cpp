@@ -1,5 +1,5 @@
 #include "sys.h"
-#include "DotID.hpp"
+#include "DotID.h"
 
 namespace cppgraphviz::dot {
 

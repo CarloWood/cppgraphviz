@@ -1,5 +1,5 @@
 #include "sys.h"
-#include "Node.hpp"
+#include "Node.h"
 
 namespace cppgraphviz::dot {
 

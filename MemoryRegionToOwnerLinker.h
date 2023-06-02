@@ -1,7 +1,7 @@
 #pragma once
 
-#include "MemoryRegionOwner.hpp"
-#include "GraphTracker.hpp"
+#include "MemoryRegionOwner.h"
+#include "GraphTracker.h"
 
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;

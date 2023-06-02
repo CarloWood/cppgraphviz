@@ -1,9 +1,9 @@
 #pragma once
 
-#include "MemoryRegionToOwnerLinker.hpp"
+#include "MemoryRegionToOwnerLinker.h"
 #include "utils/Badge.h"
 #ifdef CWDEBUG
-#include "debug_ostream_operators.hpp"
+#include "debug_ostream_operators.h"
 #endif
 
 namespace cppgraphviz {

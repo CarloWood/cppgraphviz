@@ -1,6 +1,6 @@
 #include "sys.h"
-#include "Port.hpp"
-#include "Node.hpp"
+#include "Port.h"
+#include "Node.h"
 #include <iostream>
 
 namespace cppgraphviz::dot {

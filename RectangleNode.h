@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LabelNode.hpp"
+#include "LabelNode.h"
 #include <string>
 
 namespace cppgraphviz {

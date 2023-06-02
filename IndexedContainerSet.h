@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dot/Graph.hpp"
-#include "dot/TableNode.hpp"
+#include "dot/Graph.h"
+#include "dot/TableNode.h"
 
 namespace cppgraphviz {
 

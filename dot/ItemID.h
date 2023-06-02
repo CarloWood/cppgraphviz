@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DotID.hpp"
-#include "AttributeList.hpp"
+#include "DotID.h"
+#include "AttributeList.h"
 
 namespace cppgraphviz::dot {
 

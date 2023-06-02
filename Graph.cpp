@@ -1,6 +1,6 @@
 #include "sys.h"
-#include "Graph.hpp"
-#include "Node.hpp"
+#include "Graph.h"
+#include "Node.h"
 
 namespace cppgraphviz {
 

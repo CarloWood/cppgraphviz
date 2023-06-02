@@ -1,10 +1,10 @@
 #include "sys.h"
-#include "MemoryRegionToOwnerLinker.hpp"
-#include "Node.hpp"
+#include "MemoryRegionToOwnerLinker.h"
+#include "Node.h"
 #include <exception>
 #ifdef CWDEBUG
 #include "utils/has_print_on.h"
-#include "debug_ostream_operators.hpp"
+#include "debug_ostream_operators.h"
 #endif
 
 namespace cppgraphviz {

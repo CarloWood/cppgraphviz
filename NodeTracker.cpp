@@ -1,6 +1,6 @@
 #include "sys.h"
-#include "NodeTracker.hpp"
-#include "Node.hpp"
+#include "NodeTracker.h"
+#include "Node.h"
 
 namespace cppgraphviz {
 

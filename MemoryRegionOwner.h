@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MemoryRegion.hpp"
+#include "MemoryRegion.h"
 #include "utils/ObjectTracker.h"
 #ifdef CWDEBUG
 #include "utils/has_print_on.h"

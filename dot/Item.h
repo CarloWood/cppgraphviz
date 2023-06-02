@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ItemID.hpp"
-#include "item_types.hpp"
+#include "ItemID.h"
+#include "item_types.h"
 #include <utils/AIRefCount.h>
 
 namespace cppgraphviz::dot {

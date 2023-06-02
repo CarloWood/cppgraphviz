@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AttributeList.hpp"
-#include "Item.hpp"
+#include "AttributeList.h"
+#include "Item.h"
 #include <utils/Badge.h>
 #include <boost/intrusive_ptr.hpp>
 #include <concepts>

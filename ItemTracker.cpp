@@ -1,6 +1,6 @@
 #include "sys.h"
-#include "ItemTracker.hpp"
-#include "Item.hpp"
+#include "ItemTracker.h"
+#include "Item.h"
 
 namespace cppgraphviz {
 

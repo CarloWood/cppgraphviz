@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Item.hpp"
-#include "ItemPtr.hpp"
+#include "Item.h"
+#include "ItemPtr.h"
 #include <concepts>
 #include <type_traits>
 
