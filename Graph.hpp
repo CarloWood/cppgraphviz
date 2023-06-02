@@ -107,12 +107,12 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
  private:
   void call_initialize_on_items() const;
 
-  // Implement virtual function of MemoryRegionOwner.
   void on_memory_region_usage(MemoryRegion const& used) override
   {
-    Item* item = reinterpret_cast<Item*>(used.begin());
-    std::weak_ptr<GraphTracker> subgraph_tracker = *this;
-    item->set_parent_graph_tracker(std::move(subgraph_tracker));
+    // It should only be possible that this function is called if a class derived from Graph
+    // registered a memory region (for example, Class). That derived class must override this
+    // virtual function.
+    ASSERT(false);
   }
 
 #ifdef CWDEBUG

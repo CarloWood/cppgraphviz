@@ -39,6 +39,16 @@ class Class : public Graph
     Item::current_graph_linker_.unregister_memory_region({reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)});
   }
 
+ private:
+  // Implement virtual function of MemoryRegionOwner.
+  void on_memory_region_usage(MemoryRegion const& used) override
+  {
+    // `used` starts at the `Item* object` that was passed to inform_owner_of in the constructor of some Item.
+    Item* item = reinterpret_cast<Item*>(used.begin());
+    std::weak_ptr<GraphTracker> subgraph_tracker = *this;
+    item->set_parent_graph_tracker(std::move(subgraph_tracker));
+  }
+
  protected:
   void item_attributes(dot::AttributeList& list) override
   {
