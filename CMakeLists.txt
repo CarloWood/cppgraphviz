@@ -54,23 +54,24 @@ set_property(
 # The list of source files.
 target_sources(cppgraphviz_ObjLib
   PRIVATE
-    Graph.cpp
-    Graph.hpp
-    GraphTracker.cpp
-    GraphTracker.hpp
-    IndexedContainerSet.hpp
-    Item.cpp
-    Item.hpp
-    ItemTracker.cpp
-    ItemTracker.hpp
-    LabelNode.hpp
-    MemoryRegion.hpp
-    MemoryRegionToOwnerLinker.cpp
-    MemoryRegionToOwnerLinker.hpp
-    Node.hpp
-    NodeTracker.cpp
-    NodeTracker.hpp
-    debug_ostream_operators.hpp
+    Array.h
+    Graph.cxx
+    Graph.h
+    GraphTracker.cxx
+    GraphTracker.h
+    IndexedContainerSet.h
+    Item.cxx
+    Item.h
+    ItemTracker.cxx
+    ItemTracker.h
+    LabelNode.h
+    MemoryRegion.h
+    MemoryRegionToOwnerLinker.cxx
+    MemoryRegionToOwnerLinker.h
+    Node.h
+    NodeTracker.cxx
+    NodeTracker.h
+    debug_ostream_operators.h
 )
 
 target_link_libraries(cppgraphviz_ObjLib

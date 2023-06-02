@@ -2,24 +2,24 @@ add_library(dot_ObjLib OBJECT)
 
 target_sources(dot_ObjLib
   PRIVATE
-    Attribute.cpp
-    Attribute.hpp
-    AttributeList.cpp
-    AttributeList.hpp
-    DotID.cpp
-    DotID.hpp
-    Edge.cpp
-    Edge.hpp
-    Graph.cpp
-    Graph.hpp
-    Port.cpp
-    Port.hpp
-    TableNode.cpp
-    TableNode.hpp
-    Node.cpp
-    Node.hpp
-    Item.hpp
-    item_types.hpp
+    Attribute.cxx
+    Attribute.h
+    AttributeList.cxx
+    AttributeList.h
+    DotID.cxx
+    DotID.h
+    Edge.cxx
+    Edge.h
+    Graph.cxx
+    Graph.h
+    Port.cxx
+    Port.h
+    TableNode.cxx
+    TableNode.h
+    Node.cxx
+    Node.h
+    Item.h
+    item_types.h
 )
 
 # Required include search-paths.
