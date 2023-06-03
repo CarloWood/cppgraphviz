@@ -39,10 +39,20 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
     tracker_->set_what(what);
   }
 
-  // Create a new Graph/GraphTracker pair. This is a subgraph.
-  Graph(std::weak_ptr<GraphTracker> const& root_graph, char const* what) : ItemTemplate<GraphTracker>(root_graph, this)
+  // Create a new Graph/GraphTracker pair. This is a subgraph without an associated memory region.
+  Graph(std::weak_ptr<GraphTracker> const& root_graph, char const* what) :
+    ItemTemplate<GraphTracker>(root_graph, this)
   {
-    DoutEntering(dc::notice, "Graph(root_graph, \"" << what << "\") [" << this << "]");
+    DoutEntering(dc::notice, "Graph(" << root_graph << ", \"" << what << "\") [" << this << "]");
+    tracker_->set_what(what);
+    get_parent_graph().add_graph(tracker_);
+  }
+
+  // Create a new Graph/GraphTracker pair. This is a subgraph.
+  Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracker> const& root_graph, char const* what) :
+    ItemTemplate<GraphTracker>(root_graph, this), MemoryRegionOwner(memory_region)
+  {
+    DoutEntering(dc::notice, "Graph(" << memory_region << ", " << root_graph << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
     get_parent_graph().add_graph(tracker_);
   }
@@ -50,6 +60,7 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
   // Move a Graph, updating its GraphTracker.
   Graph(Graph&& other, char const* what) :
     ItemTemplate<GraphTracker>(std::move(other)),
+    MemoryRegionOwner(std::move(other)),
     node_trackers_(std::move(other.node_trackers_)),
     graph_trackers_(std::move(other.graph_trackers_))
   {
@@ -63,12 +74,13 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
  private:
   template<typename T>
   friend class Class;
-  Graph(Graph const& other, char const* what) :
+  Graph(MemoryRegion memory_region, Graph const& other, char const* what) :
     ItemTemplate<GraphTracker>(other.root_graph_tracker(), this),
+    MemoryRegionOwner(memory_region),
     node_trackers_{},
     graph_trackers_{}
   {
-    DoutEntering(dc::notice, "Graph(Graph const& " << &other << ", \"" << what << "\") [" << this << "]");
+    DoutEntering(dc::notice, "Graph(" << memory_region << ", Graph const& " << &other << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
     get_parent_graph().add_graph(tracker_);
   }

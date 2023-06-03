@@ -9,6 +9,7 @@
 namespace cppgraphviz {
 
 class Graph;
+class MemoryRegionOwner;
 
 class Item
 {
@@ -16,7 +17,7 @@ class Item
   std::weak_ptr<GraphTracker> root_graph_tracker_;      // The root graph of this Item.
   std::weak_ptr<GraphTracker> parent_graph_tracker_;    // The graph that this Item was added to.
 
-  template<typename T> friend class Class;
+  friend class MemoryRegionOwner;
   static thread_local MemoryRegionToOwnerLinker current_graph_linker_;
 
  private:

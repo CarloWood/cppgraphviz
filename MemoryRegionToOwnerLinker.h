@@ -7,6 +7,7 @@ namespace cppgraphviz {
 using utils::has_print_on::operator<<;
 
 class MemoryRegionToOwnerLinker;
+class Item;
 
 class MemoryRegionToOwner
 {
@@ -27,12 +28,12 @@ class MemoryRegionToOwner
   MemoryRegionToOwner(MemoryRegionToOwner&& other) :
     memory_region_(other.memory_region_), memory_region_owner_tracker_(std::move(other.memory_region_owner_tracker_)) { }
 
-  // Return memory_region_owner_tracker_ if [object, object + size> falls inside memory_region_,
+  // Return memory_region_owner_tracker_ if [item, item + size> falls inside memory_region_,
   // otherwise return default_memory_region_owner_tracker.
   std::weak_ptr<MemoryRegionOwnerTracker> const& get_memory_region_owner_tracker(
       MemoryRegion const& memory_region_key, std::weak_ptr<MemoryRegionOwnerTracker> const& default_memory_region_owner_tracker) const;
 
-  void inform_owner(MemoryRegion const& used) const;
+  void inform_owner(MemoryRegion const& item_memory_region) const;
 
 #ifdef CWDEBUG
   void print_on(std::ostream& os) const;
@@ -71,10 +72,11 @@ class MemoryRegionToOwnerLinker
   // Returns true if successful.
   bool erase_memory_region_to_owner(MemoryRegion const& memory_region);
 
+  // Called by the public inform_owner_of.
+  void inform_owner_of(MemoryRegionToOwner const& default_owner, MemoryRegion const& item_memory_region) const;
+
  public:
-  void inform_owner_of(void* object) const;
-  void inform_owner_of(MemoryRegion const& memory_region) const;
-  void inform_owner_of(MemoryRegionToOwner const& default_owner, MemoryRegion const& memory_region) const;
+  void inform_owner_of(Item* item) const;
 
   void register_new_memory_region_for(MemoryRegion memory_region, std::weak_ptr<MemoryRegionOwnerTracker> const& owner);
   void unregister_memory_region(MemoryRegion memory_region);

@@ -66,8 +66,11 @@ target_sources(cppgraphviz_ObjLib
     ItemTracker.h
     LabelNode.h
     MemoryRegion.h
+    MemoryRegionOwner.cxx
+    MemoryRegionOwner.h
     MemoryRegionToOwnerLinker.cxx
     MemoryRegionToOwnerLinker.h
+    Node.cxx
     Node.h
     NodeTracker.cxx
     NodeTracker.h

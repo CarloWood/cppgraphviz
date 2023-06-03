@@ -3,12 +3,14 @@
 #include "NodeTracker.h"
 #include "Item.h"
 #include "Graph.h"
+#include "utils/has_print_on.h"
 #include <boost/intrusive_ptr.hpp>
 #ifdef CWDEBUG
 #include "debug_ostream_operators.h"
 #endif
 
 namespace cppgraphviz {
+using utils::has_print_on::operator<<;
 
 template<typename T>
 class Class;
@@ -84,6 +86,10 @@ class Node : public ItemTemplate<NodeTracker>
     // Add the attributes of this Node.
     item_attributes(tracker_->node_ptr().attribute_list());
   }
+
+#ifdef CWDEBUG
+  void print_on(std::ostream& os) const;
+#endif
 };
 
 } // namespace cppgraphviz

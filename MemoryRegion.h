@@ -11,7 +11,7 @@ class MemoryRegion
   char const* end_;
 
  public:
-  MemoryRegion(char* begin, size_t size) : begin_(begin), end_(begin + size) { }
+  constexpr MemoryRegion(char* begin, size_t size) : begin_(begin), end_(begin + size) { }
 
   bool operator==(MemoryRegion const& other) const
   {
