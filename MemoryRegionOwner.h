@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dot/Node.h"
 #include "MemoryRegion.h"
 #include "utils/ObjectTracker.h"
 #ifdef CWDEBUG
@@ -17,16 +18,16 @@ using MemoryRegionOwnerTracker = utils::ObjectTracker<MemoryRegionOwner>;
 class MemoryRegionOwner : public utils::TrackedObject<MemoryRegionOwnerTracker>
 {
  private:
-  bool registered_memory_region_ = false;
+  MemoryRegion registered_memory_region_;
 
  protected:
   MemoryRegionOwner() = default;
   MemoryRegionOwner(MemoryRegion memory_region);
-  MemoryRegionOwner(MemoryRegionOwner&& orig) : utils::TrackedObject<MemoryRegionOwnerTracker>(std::move(orig)) { }
+  MemoryRegionOwner(MemoryRegionOwner&& orig) = default;
   ~MemoryRegionOwner();
 
  public:
-  virtual void on_memory_region_usage(MemoryRegion const& used) = 0;
+  virtual void on_memory_region_usage(MemoryRegion const& used, dot::NodePtr* node_ptr_ptr) = 0;
 
 #ifdef CWDEBUG
  public:

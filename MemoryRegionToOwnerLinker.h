@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dot/Node.h"
 #include "MemoryRegionOwner.h"
 #include "GraphTracker.h"
 
@@ -33,7 +34,7 @@ class MemoryRegionToOwner
   std::weak_ptr<MemoryRegionOwnerTracker> const& get_memory_region_owner_tracker(
       MemoryRegion const& memory_region_key, std::weak_ptr<MemoryRegionOwnerTracker> const& default_memory_region_owner_tracker) const;
 
-  void inform_owner(MemoryRegion const& item_memory_region) const;
+  void inform_owner(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr) const;
 
 #ifdef CWDEBUG
   void print_on(std::ostream& os) const;
@@ -73,10 +74,10 @@ class MemoryRegionToOwnerLinker
   bool erase_memory_region_to_owner(MemoryRegion const& memory_region);
 
   // Called by the public inform_owner_of.
-  void inform_owner_of(MemoryRegionToOwner const& default_owner, MemoryRegion const& item_memory_region) const;
+  void inform_owner_of(MemoryRegionToOwner const& default_owner, MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr) const;
 
  public:
-  void inform_owner_of(Item* item) const;
+  void inform_owner_of(Item* item, dot::NodePtr* node_ptr = nullptr) const;
 
   void register_new_memory_region_for(MemoryRegion memory_region, std::weak_ptr<MemoryRegionOwnerTracker> const& owner);
   void unregister_memory_region(MemoryRegion memory_region);

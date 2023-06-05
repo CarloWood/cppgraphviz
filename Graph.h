@@ -28,19 +28,20 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
  private:
   // Disambiguate the tracker_ member variable.
   using ItemTemplate<GraphTracker>::tracker_;
-  std::vector<std::weak_ptr<NodeTracker>> node_trackers_;       // The nodes that are added to this graph.
-  std::vector<std::weak_ptr<GraphTracker>> graph_trackers_;     // The subgraphs that are added to this graph.
+  std::vector<std::weak_ptr<NodeTracker>> node_trackers_;               // The nodes that are added to this graph.
+  std::vector<std::weak_ptr<GraphTracker>> graph_trackers_;             // The subgraphs that are added to this graph.
+  std::vector<std::weak_ptr<MemoryRegionOwnerTracker>> array_trackers_; // Array objects that were added to this (root) graph.
 
  public:
   // Create a new Graph/GraphTracker pair. This is a root graph.
-  Graph(char const* what) : ItemTemplate<GraphTracker>({})
+  Graph(std::string_view what) : ItemTemplate<GraphTracker>({})
   {
     DoutEntering(dc::notice, "Graph(\"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
   }
 
   // Create a new Graph/GraphTracker pair. This is a subgraph without an associated memory region.
-  Graph(std::weak_ptr<GraphTracker> const& root_graph, char const* what) :
+  Graph(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) :
     ItemTemplate<GraphTracker>(root_graph, this)
   {
     DoutEntering(dc::notice, "Graph(" << root_graph << ", \"" << what << "\") [" << this << "]");
@@ -49,7 +50,7 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
   }
 
   // Create a new Graph/GraphTracker pair. This is a subgraph.
-  Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracker> const& root_graph, char const* what) :
+  Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) :
     ItemTemplate<GraphTracker>(root_graph, this), MemoryRegionOwner(memory_region)
   {
     DoutEntering(dc::notice, "Graph(" << memory_region << ", " << root_graph << ", \"" << what << "\") [" << this << "]");
@@ -58,11 +59,12 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
   }
 
   // Move a Graph, updating its GraphTracker.
-  Graph(Graph&& other, char const* what) :
+  Graph(Graph&& other, std::string_view what) :
     ItemTemplate<GraphTracker>(std::move(other)),
     MemoryRegionOwner(std::move(other)),
     node_trackers_(std::move(other.node_trackers_)),
-    graph_trackers_(std::move(other.graph_trackers_))
+    graph_trackers_(std::move(other.graph_trackers_)),
+    array_trackers_(std::move(other.array_trackers_))
   {
     DoutEntering(dc::notice, "Graph(Graph&& " << &other << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
@@ -74,11 +76,12 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
  private:
   template<typename T>
   friend class Class;
-  Graph(MemoryRegion memory_region, Graph const& other, char const* what) :
+  Graph(MemoryRegion memory_region, Graph const& other, std::string_view what) :
     ItemTemplate<GraphTracker>(other.root_graph_tracker(), this),
     MemoryRegionOwner(memory_region),
     node_trackers_{},
-    graph_trackers_{}
+    graph_trackers_{},
+    array_trackers_{}
   {
     DoutEntering(dc::notice, "Graph(" << memory_region << ", Graph const& " << &other << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
@@ -97,16 +100,21 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
     // Make a copy of the child items and then remove them from this graph for proper bookkeeping.
     auto node_trackers = std::move(node_trackers_);
     auto graph_trackers = std::move(graph_trackers_);
+    auto array_trackers = std::move(array_trackers_);
     for (auto& weak_node_tracker : node_trackers)
       remove_node(weak_node_tracker.lock());
     for (auto& weak_graph_tracker : graph_trackers)
       remove_graph(weak_graph_tracker.lock());
+    for (auto& weak_array_tracker : array_trackers)
+      remove_array(weak_array_tracker.lock());
   }
 
   void add_node(std::weak_ptr<NodeTracker> node_tracker);
   void remove_node(std::shared_ptr<NodeTracker>&& node_tracker);
   void add_graph(std::weak_ptr<GraphTracker> graph_tracker);
   void remove_graph(std::shared_ptr<GraphTracker>&& graph_tracker);
+  void add_array(std::weak_ptr<MemoryRegionOwnerTracker> weak_array_tracker);
+  void remove_array(std::shared_ptr<MemoryRegionOwnerTracker>&& array_tracker);
   void write_dot(std::ostream& os) const;
 
   void initialize() override
@@ -119,7 +127,7 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
  private:
   void call_initialize_on_items() const;
 
-  void on_memory_region_usage(MemoryRegion const& used) override
+  void on_memory_region_usage(MemoryRegion const& UNUSED_ARG(item_memory_region), dot::NodePtr* UNUSED_ARG(node_ptr_ptr)) override
   {
     // It should only be possible that this function is called if a class derived from Graph
     // registered a memory region (for example, Class). That derived class must override this

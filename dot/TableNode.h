@@ -63,6 +63,11 @@ class TableNodeItem : public Item
     copy_elements([&](size_t i){ return container[static_cast<typename Container::index_type>(i)]; }, container.size());
   }
 
+  void replace_element(size_t index, dot::NodePtr& node_ptr)
+  {
+    copied_elements_[index] = node_ptr;
+  }
+
   void write_html_to(std::ostream& os, std::string const& indentation) const;
 
   Port at(size_t index) const

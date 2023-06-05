@@ -8,14 +8,14 @@ template<typename T>
 class Class : public Graph
 {
  public:
-  Class(std::weak_ptr<GraphTracker> const& root_graph, char const* what) :
+  Class(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) :
     Graph({reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, root_graph, what)
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(" <<
         root_graph << ", \"" << what << "\") [" << this << "]");
   }
 
-  Class(Class const& other, char const* what) :
+  Class(Class const& other, std::string_view what) :
     Graph({reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, other, what)
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(Class const& " <<
@@ -23,13 +23,13 @@ class Class : public Graph
   }
 
   // Moving is the same as copying in this context.
-  Class(Class&& other, char const* what) : Class(other, what)
+  Class(Class&& other, std::string_view what) : Class(other, what)
   {
   }
 
  private:
   // Implement virtual function of MemoryRegionOwner.
-  void on_memory_region_usage(MemoryRegion const& item_memory_region) override
+  void on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* UNUSED_ARG(node_ptr_ptr)) override
   {
     // `item_memory_region` starts at the `Item* object` that was passed to inform_owner_of in the constructor of some Item.
     Item* item = reinterpret_cast<Item*>(item_memory_region.begin());

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "get_index_label.h"
+#include "IndexedContainerSet.h"
 #include "MemoryRegionOwner.h"
 #include "Graph.h"
 #include "utils/Array.h"
@@ -15,75 +17,40 @@
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;
 
-class ArrayIndexGraph : public Graph
-{
- public:
-  using Graph::Graph;
-
- protected:
-  void item_attributes(dot::AttributeList& list) override
-  {
-    std::string prev_style;
-    if (list.has_key("style"))
-    {
-      prev_style = std::string{list.get_value("style")} + ",";
-      list.remove("style");
-    }
-    list += {{"cluster", "true"}, {"style", prev_style + "rounded"}, {"label", "<Index>"}, {"color", "green"}};
-  }
-};
-
-template<typename _Index>
 class ArrayMemoryRegionOwner : public MemoryRegionOwner
 {
  private:
-  char* begin_;
-  size_t element_size_;
-  size_t number_of_elements_;
-  std::weak_ptr<GraphTracker> subgraph_tracker_;
-  static std::map<uint64_t, ArrayIndexGraph> subgraphs_;
+  char* begin_;                         // Pointer to the first element.
+  size_t element_size_;                 // Element stride.
+  size_t number_of_elements_;           // The size() of the array.
+  dot::TableNodePtr table_node_ptr_;
+  std::vector<std::weak_ptr<NodeTracker>> id_to_node_map_; // A map of array index to the tracker of the associated Node.
+  static std::map<uint64_t, IndexedContainerSet> index_container_sets_;
 
  public:
-  ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph, char* begin, size_t element_size, size_t number_of_elements) :
-    MemoryRegionOwner({ begin, number_of_elements * element_size }),
-    begin_(begin), element_size_(element_size), number_of_elements_(number_of_elements),
-    subgraph_tracker_(get_subgraph_tracker(root_graph)) { }
+  ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph, char* begin, size_t element_size, size_t number_of_elements,
+      std::type_info const& index_type_info, std::string const& demangled_index_type_name);
+
+  void call_initialize_on_elements();
 
  private:
-  std::weak_ptr<GraphTracker> get_subgraph_tracker(std::weak_ptr<GraphTracker> const& root_graph)
-  {
-    std::shared_ptr<GraphTracker> root_graph_tracker = root_graph.lock();
-    // Paranoia check.
-    ASSERT(root_graph_tracker);
-    // Create a key that is unique for a _Index / root_graph pair.
-    uint64_t key = utils::pointer_hash_combine(typeid(_Index).hash_code(), root_graph_tracker.get());
-
-    // The subgraphs do not have a memory region associated with them. Just pass something that will never match.
-    auto ibp = subgraphs_.try_emplace(key, root_graph, "ArrayMemoryRegionOwner::subgraphs_");
-    return ibp.first->second;
-  }
-
-  void on_memory_region_usage(MemoryRegion const& item_memory_region) override
-  {
-    DoutEntering(dc::notice, "on_memory_region_usage(" << item_memory_region << ") [" << this << "]");
-    //FIXME
-    Item* item = reinterpret_cast<Item*>(item_memory_region.begin());
-    item->set_parent_graph_tracker(subgraph_tracker_);
-  }
+  void on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr) override;
 };
 
 template<typename T, size_t N, typename _Index = utils::ArrayIndex<T>>
-class Array : public ArrayMemoryRegionOwner<_Index>, public utils::Array<T, N, _Index>
+class Array : public ArrayMemoryRegionOwner, public utils::Array<T, N, _Index>
 {
  public:
   constexpr Array(std::weak_ptr<GraphTracker> const& root_graph, std::initializer_list<T> ilist) :
-    ArrayMemoryRegionOwner<_Index>(root_graph, reinterpret_cast<char*>(this), sizeof(T), N),
+    ArrayMemoryRegionOwner(root_graph, reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),
+        sizeof(T), N, typeid(_Index), get_index_label<_Index>()),
     utils::Array<T, N, _Index>(ilist)
   {
   }
 
   constexpr Array(std::weak_ptr<GraphTracker> const& root_graph) :
-    ArrayMemoryRegionOwner<_Index>(root_graph, reinterpret_cast<char*>(this), sizeof(T), N),
+    ArrayMemoryRegionOwner(root_graph, reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),
+        sizeof(T), N, typeid(_Index), get_index_label<_Index>()),
     utils::Array<T, N, _Index>()
   {
   }
@@ -96,9 +63,5 @@ class Array : public ArrayMemoryRegionOwner<_Index>, public utils::Array<T, N, _
   }
 #endif
 };
-
-//static
-template<typename _Index>
-std::map<uint64_t, ArrayIndexGraph> ArrayMemoryRegionOwner<_Index>::subgraphs_;
 
 } // namespace cppgraphviz

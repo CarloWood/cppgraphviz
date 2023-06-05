@@ -5,45 +5,43 @@
 
 namespace cppgraphviz {
 
-template<typename Index>
 class IndexedContainerSet;
 
 namespace detail {
 
-template<typename Index>
 class RankdirGraphData : public dot::GraphItem
 {
  private:
-  IndexedContainerSet<Index>* owner_;
+  IndexedContainerSet* owner_;
 
   void set_rankdir(dot::RankDir rankdir) const final;
 
  public:
-  void set_owner(IndexedContainerSet<Index>* owner)
+  void set_owner(IndexedContainerSet* owner)
   {
     owner_ = owner;
   }
 };
 
-template<typename Index>
-using RankdirGraph = dot::ItemPtrTemplate<RankdirGraphData<Index>>;
+using RankdirGraph = dot::ItemPtrTemplate<RankdirGraphData>;
 
 } // namespace detail
 
-// A cluster graph containing one or more indexed containers that use Index as index type.
-template<typename Index>
+// A cluster graph containing one or more indexed containers.
 class IndexedContainerSet
 {
  public:
   using item_type = dot::GraphItem;
 
  private:
-  detail::RankdirGraph<Index> outer_subgraph_;  // This subgraph wraps the inner subgraph.
-  dot::GraphPtr inner_subgraph_;                // This subgraph references the dot::TableNode's that represent the indexed containers.
+  detail::RankdirGraph outer_subgraph_;         // This subgraph wraps the inner subgraph.
+  dot::GraphPtr inner_subgraph_;                // This subgraph references the dot::TableNodeItem's that represent the indexed containers.
 
- private:
-  void initialize()
+ public:
+  IndexedContainerSet(std::string_view what)
   {
+    outer_subgraph_->add_attribute({"what", std::string{what} + ".outer_subgraph_"});
+    inner_subgraph_->add_attribute({"what", std::string{what} + ".inner_subgraph_"});
     outer_subgraph_->add_attribute({"cluster", "true"});
     outer_subgraph_->add_attribute({"style", "rounded"});
     outer_subgraph_->add_attribute({"color", "lightblue"});
@@ -54,19 +52,8 @@ class IndexedContainerSet
     outer_subgraph_->set_owner(this);
   }
 
- public:
-  IndexedContainerSet(char const* what)
+  IndexedContainerSet(std::string const& label, std::string_view what) : IndexedContainerSet(what)
   {
-    outer_subgraph_->add_attribute({"what", std::string{what} + ".outer_subgraph_"});
-    inner_subgraph_->add_attribute({"what", std::string{what} + ".inner_subgraph_"});
-    initialize();
-  }
-
-  IndexedContainerSet(std::string const& label, char const* what)
-  {
-    outer_subgraph_->add_attribute({"what", std::string{what} + ".outer_subgraph_"});
-    inner_subgraph_->add_attribute({"what", std::string{what} + ".inner_subgraph_"});
-    initialize();
     set_label(label);
   }
 
@@ -102,28 +89,5 @@ class IndexedContainerSet
     }
   }
 };
-
-template<typename Index>
-void IndexedContainerSet<Index>::add_to_graph(dot::GraphItem& graph_item)
-{
-  graph_item.add(outer_subgraph_);
-}
-
-template<typename Index>
-void IndexedContainerSet<Index>::remove_from_graph(dot::GraphItem& graph_item)
-{
-  graph_item.remove(outer_subgraph_);
-}
-
-namespace detail {
-
-template<typename Index>
-void RankdirGraphData<Index>::set_rankdir(dot::RankDir rankdir) const
-{
-  owner_->rankdir_changed(rankdir);
-  dot::GraphItem::set_rankdir(rankdir);
-}
-
-} // namespace detail
 
 } // namespace cppgraphviz

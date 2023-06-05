@@ -21,7 +21,7 @@ class Node : public ItemTemplate<NodeTracker>
   // Create a new Node/NodeTracker pair for a class member.
   // That means that Item should always find a parent graph tracker for this; if we don't then
   // this is probably a temporary that will be moved or copied shortly after to the class member.
-  Node(char const* what) : ItemTemplate(this)
+  Node(std::string_view what) : ItemTemplate(this)
   {
     DoutEntering(dc::notice, "Node(root_graph, \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
@@ -32,7 +32,7 @@ class Node : public ItemTemplate<NodeTracker>
   }
 
   // Create a new Node/NodeTracker pair.
-  Node(std::weak_ptr<GraphTracker> const& root_graph, char const* what) : ItemTemplate(root_graph, this)
+  Node(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) : ItemTemplate(root_graph, this)
   {
     DoutEntering(dc::notice, "Node(root_graph, \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
@@ -40,7 +40,7 @@ class Node : public ItemTemplate<NodeTracker>
   }
 
   // Move a Node, updating its NodeTracker.
-  Node(Node&& node, char const* what) : ItemTemplate<NodeTracker>(std::move(node))
+  Node(Node&& node, std::string_view what) : ItemTemplate<NodeTracker>(std::move(node))
   {
     DoutEntering(dc::notice, "Node(Node&& " << &node << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
@@ -52,12 +52,14 @@ class Node : public ItemTemplate<NodeTracker>
   }
 
   // Copy a Node, creating a new NodeTracker as well.
-  Node(Node const& other, char const* what) :
+  Node(Node const& other, std::string_view what) :
     ItemTemplate(other.root_graph_tracker(), this)
   {
     DoutEntering(dc::notice, "Node(Node const& " << &other << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
-    get_parent_graph().add_node(tracker_);
+    // Node's that are added to a TableNode are not added to a Graph.
+    if (has_parent_graph())
+      get_parent_graph().add_node(tracker_);
   }
 
   Node(Node const& other) : ItemTemplate(other.root_graph_tracker(), this)

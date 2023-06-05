@@ -1,6 +1,7 @@
 #include "sys.h"
 #include "Graph.h"
 #include "Node.h"
+#include "Array.h"
 
 namespace cppgraphviz {
 
@@ -50,6 +51,25 @@ void Graph::remove_graph(std::shared_ptr<GraphTracker>&& graph_tracker)
   tracker_->graph_ptr()->remove(graph_tracker->graph_ptr());
 }
 
+void Graph::add_array(std::weak_ptr<MemoryRegionOwnerTracker> weak_array_tracker)
+{
+  std::shared_ptr<MemoryRegionOwnerTracker> array_tracker = weak_array_tracker.lock();
+  if (array_tracker)
+  {
+    array_trackers_.push_back(std::move(weak_array_tracker));
+  }
+}
+
+void Graph::remove_array(std::shared_ptr<MemoryRegionOwnerTracker>&& array_tracker)
+{
+  // Erase array_tracker and any expired elements from array_trackers_.
+  std::erase_if(array_trackers_,
+      [&array_tracker](std::weak_ptr<MemoryRegionOwnerTracker> const& wp){
+        auto sp = wp.lock();
+        return !sp || sp == array_tracker;
+      });
+}
+
 void Graph::call_initialize_on_items() const
 {
   for (std::weak_ptr<NodeTracker> const& weak_node_tracker : node_trackers_)
@@ -68,6 +88,16 @@ void Graph::call_initialize_on_items() const
     {
       Item& item = *graph_tracker;
       item.initialize();
+    }
+  }
+  for (std::weak_ptr<MemoryRegionOwnerTracker> const& weak_array_tracker : array_trackers_)
+  {
+    std::shared_ptr<MemoryRegionOwnerTracker> array_tracker = weak_array_tracker.lock();
+    if (array_tracker)
+    {
+      MemoryRegionOwner& memory_region_owner = array_tracker->tracked_object();
+      ArrayMemoryRegionOwner& array_memory_region_owner = static_cast<ArrayMemoryRegionOwner&>(memory_region_owner);
+      array_memory_region_owner.call_initialize_on_elements();
     }
   }
 }

@@ -54,11 +54,13 @@ set_property(
 # The list of source files.
 target_sources(cppgraphviz_ObjLib
   PRIVATE
+    Array.cxx
     Array.h
     Graph.cxx
     Graph.h
     GraphTracker.cxx
     GraphTracker.h
+    IndexedContainerSet.cxx
     IndexedContainerSet.h
     Item.cxx
     Item.h
