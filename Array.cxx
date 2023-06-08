@@ -6,13 +6,14 @@ namespace cppgraphviz {
 
 ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph,
     char* begin, size_t element_size, size_t number_of_elements, std::type_info const& index_type_info,
-    std::string const& demangled_index_type_name) :
+    std::string const& demangled_index_type_name, std::string_view what) :
   MemoryRegionOwner({ begin, element_size * number_of_elements }),
+  LabelNode(root_graph, what),
   begin_(begin), element_size_(element_size), number_of_elements_(number_of_elements),
-  id_to_node_map_(element_size_)
+  id_to_node_map_(number_of_elements_)
 {
   DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(" << root_graph << ", " <<
-      (void*)begin << ", " << element_size << ", " << number_of_elements << ", index_type_info)");
+      (void*)begin << ", " << element_size << ", " << number_of_elements << ", index_type_info, \"" << what << "\")");
 
   table_node_ptr_->add_attribute({"what", "ArrayMemoryRegionOwner::table_node_ptr_"});
   // Instead of copying elements, we create new dot::NodePtr objects and use
@@ -37,7 +38,59 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
   }
   indexed_container_set.add_container(table_node_ptr_);
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
-  root_graph_tracker->tracked_object().add_array(tracker_);
+  root_graph_tracker->tracked_object().add_array(MemoryRegionOwner::tracker_);
+}
+
+ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(char* begin, size_t element_size, size_t number_of_elements,
+    std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what) :
+  MemoryRegionOwner({ begin, element_size * number_of_elements }),
+  //FIXME: root graph?
+  LabelNode(what)
+{
+  DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(" <<
+      (void*)begin << ", " << element_size << ", " << number_of_elements << ", index_type_info, " <<
+      demangled_index_type_name << ", \"" << what << "\")");
+  ASSERT(false);
+}
+
+ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& other,
+    char* begin, std::type_info const& index_type_info, std::string_view what) :
+  MemoryRegionOwner({ begin, other.element_size_ * other.number_of_elements_ }),
+  LabelNode(other, what),
+  begin_(begin), element_size_(other.element_size_), number_of_elements_(other.number_of_elements_),
+  id_to_node_map_(number_of_elements_)
+{
+  DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& " << &other << ", " <<
+      (void*)begin << ", index_type_info, \"" << what << "\")");
+
+  table_node_ptr_->add_attribute({"what", "ArrayMemoryRegionOwner::table_node_ptr_"});
+  // Instead of copying elements, we create new dot::NodePtr objects and use
+  // those temporarily until they can be overwritten later in on_memory_region_usage.
+  table_node_ptr_->copy_elements([](size_t i){
+        dot::NodePtr node_ptr;
+        node_ptr->add_attribute({"what", "default NodePtr for Array"});
+        return node_ptr;
+      }, number_of_elements_);
+  std::shared_ptr<GraphTracker> root_graph = root_graph_tracker().lock();
+  // Paranoia check.
+  ASSERT(root_graph);
+  // Create a key that is unique for a _Index / root_graph pair.
+  uint64_t key = utils::pointer_hash_combine(index_type_info.hash_code(), root_graph.get());
+  auto iter = index_container_sets_.find(key);
+  ASSERT(iter != index_container_sets_.end());
+  IndexedContainerSet& indexed_container_set = iter->second;
+  indexed_container_set.add_container(table_node_ptr_);
+  // Add this array to the root graph, so that it will call initialize before writing the dot file.
+  root_graph->tracked_object().add_array(MemoryRegionOwner::tracker_);
+}
+
+ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& orig, char* begin, std::string_view what) :
+  MemoryRegionOwner(std::move(orig), { begin, orig.element_size_ * orig.number_of_elements_ }),
+  LabelNode(std::move(orig), what),
+  begin_(begin), element_size_(orig.element_size_), number_of_elements_(orig.number_of_elements_),
+  table_node_ptr_(std::move(orig.table_node_ptr_)), id_to_node_map_(std::move(orig.id_to_node_map_))
+{
+  DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& " << &orig << ", " << (void*)begin);
 }
 
 void ArrayMemoryRegionOwner::on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr)

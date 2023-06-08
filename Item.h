@@ -123,7 +123,7 @@ class ItemTemplate : public utils::TrackedObject<Tracker>, public Item
   ItemTemplate(std::weak_ptr<GraphTracker> const& root_graph_tracker, Item* object) :
     Item(root_graph_tracker, object, &this->tracker().node_ptr()) { }
 
-  ItemTemplate(ItemTemplate&& other) : utils::TrackedObject<Tracker>(std::move(other)), Item(std::move(other)) { }
+  ItemTemplate(ItemTemplate&& orig) : utils::TrackedObject<Tracker>(std::move(orig)), Item(std::move(orig)) { }
 
   // Return the value of the "what" attribute.
   std::string get_what() const

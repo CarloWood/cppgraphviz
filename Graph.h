@@ -59,14 +59,15 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
   }
 
   // Move a Graph, updating its GraphTracker.
-  Graph(Graph&& other, std::string_view what) :
-    ItemTemplate<GraphTracker>(std::move(other)),
-    MemoryRegionOwner(std::move(other)),
-    node_trackers_(std::move(other.node_trackers_)),
-    graph_trackers_(std::move(other.graph_trackers_)),
-    array_trackers_(std::move(other.array_trackers_))
+  // The new instance is not associated with a new MemoryRegion because ... FIXME
+  Graph(Graph&& orig, std::string_view what) :
+    ItemTemplate<GraphTracker>((Item::current_graph_linker_.unregister_memory_region(orig.registered_memory_region_), std::move(orig))),
+    MemoryRegionOwner(std::move(orig), {}),
+    node_trackers_(std::move(orig.node_trackers_)),
+    graph_trackers_(std::move(orig.graph_trackers_)),
+    array_trackers_(std::move(orig.array_trackers_))
   {
-    DoutEntering(dc::notice, "Graph(Graph&& " << &other << ", \"" << what << "\") [" << this << "]");
+    DoutEntering(dc::notice, "Graph(Graph&& " << &orig << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
   }
 

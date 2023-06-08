@@ -17,13 +17,13 @@ using MemoryRegionOwnerTracker = utils::ObjectTracker<MemoryRegionOwner>;
 
 class MemoryRegionOwner : public utils::TrackedObject<MemoryRegionOwnerTracker>
 {
- private:
+ protected:
   MemoryRegion registered_memory_region_;
 
  protected:
   MemoryRegionOwner() = default;
   MemoryRegionOwner(MemoryRegion memory_region);
-  MemoryRegionOwner(MemoryRegionOwner&& orig) = default;
+  MemoryRegionOwner(MemoryRegionOwner&& orig, MemoryRegion memory_region);
   ~MemoryRegionOwner();
 
  public:

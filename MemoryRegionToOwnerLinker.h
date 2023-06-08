@@ -36,6 +36,9 @@ class MemoryRegionToOwner
 
   void inform_owner(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr) const;
 
+  // Accessor.
+  MemoryRegion const& memory_region() const { return memory_region_; }
+
 #ifdef CWDEBUG
   void print_on(std::ostream& os) const;
 #endif

@@ -40,7 +40,15 @@ void MemoryRegionToOwner::inform_owner(MemoryRegion const& item_memory_region, d
 #ifdef CWDEBUG
 void MemoryRegionToOwner::print_on(std::ostream& os) const
 {
-  os << memory_region_ << " : " << memory_region_owner_tracker_;
+  os << memory_region_ << " : ";
+  try
+  {
+    os << memory_region_owner_tracker_;
+  }
+  catch (std::runtime_error const& error)
+  {
+    os << "MOVED!?!";
+  }
 }
 #endif
 
@@ -48,14 +56,31 @@ bool MemoryRegionToOwnerLinker::erase_memory_region_to_owner(MemoryRegion const&
 {
   DoutEntering(dc::notice, "erase_memory_region_to_owner(" << memory_region << ")");
 
+  // find returns any region that overlaps with memory_region.
+  // The way memory regions are added (new memory regions can only fall completely inside a previous registered
+  // memory region or completely outside of any) there are not partial overlaps.
   auto iter = memory_region_to_owner_map_.find(memory_region);
   if (iter == memory_region_to_owner_map_.end())
     return false;
 
   Dout(dc::notice, "before:\n" << *this);
 
-  if (!iter->second.erase_memory_region_to_owner(memory_region))
+  // The first time we have a match it is either an exact match, or it contains
+  // the region that we are looking for. In the latter can we can't call
+  // iter->second.erase_memory_region_to_owner(memory_region) because that would
+  // then "find" and remove regions that are actually contained inside our region.
+  if (iter->first.memory_region() == memory_region)     // Exact match: we found it.
     memory_region_to_owner_map_.erase(iter);
+  else
+  {
+#if CW_DEBUG
+    bool success =
+#endif
+      // Find and remove memory_region from the container that we just found, which encapsulates it.
+      iter->second.erase_memory_region_to_owner(memory_region);
+    // This should always succeed: we shouldn't be trying to remove regions that aren't there.
+    ASSERT(success);
+  }
 
   Dout(dc::notice, "after:\n" << *this);
 
