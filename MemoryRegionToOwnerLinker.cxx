@@ -40,15 +40,7 @@ void MemoryRegionToOwner::inform_owner(MemoryRegion const& item_memory_region, d
 #ifdef CWDEBUG
 void MemoryRegionToOwner::print_on(std::ostream& os) const
 {
-  os << memory_region_ << " : ";
-  try
-  {
-    os << memory_region_owner_tracker_;
-  }
-  catch (std::runtime_error const& error)
-  {
-    os << "MOVED!?!";
-  }
+  os << memory_region_ << " : " << memory_region_owner_tracker_;
 }
 #endif
 

@@ -111,11 +111,13 @@ void Graph::write_dot(std::ostream& os) const
 #ifdef CWDEBUG
 void Graph::print_on(std::ostream& os) const
 {
+#if CW_DEBUG
   std::weak_ptr<GraphTracker> weak_graph_tracker = ItemTemplate<GraphTracker>::operator std::weak_ptr<GraphTracker>();
   std::shared_ptr<GraphTracker> graph_tracker = weak_graph_tracker.lock();
   GraphTracker const* graph_tracker2 = graph_tracker ? graph_tracker.get() : nullptr;
-  if (!graph_tracker2)
-    throw std::runtime_error("No tracker");
+  // Do not attempt to print an object that was moved; if this object was moved then ItemTemplate<GraphTracker>::tracker_ points to null.
+  ASSERT(graph_tracker2);
+#endif
 
   os << '"' << tracker().graph_ptr().item().attribute_list().get("what", "<NO \"what\">") << '"';
 }

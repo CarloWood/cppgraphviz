@@ -13,7 +13,11 @@ MemoryRegionOwner::MemoryRegionOwner(MemoryRegionOwner&& orig, MemoryRegion memo
   utils::TrackedObject<MemoryRegionOwnerTracker>(std::move(orig)),
   registered_memory_region_{memory_region}
 {
-  orig.registered_memory_region_ = {};  // Stop the destructor from unregistering this memory region again.
+  // The old memory region should already have been removed before we get here because
+  // we just moved the TrackedObject<MemoryRegionOwnerTracker> base class of object,
+  // and unregister_memory_region accesses that (for debug output).
+  // Therefore, we must stop the destructor from unregistering this memory region again.
+  orig.registered_memory_region_ = {};
   Item::current_graph_linker_.register_new_memory_region_for(memory_region, tracker_);
 }
 

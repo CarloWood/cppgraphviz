@@ -61,6 +61,11 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
   // Move a Graph, updating its GraphTracker.
   // The new instance is not associated with a new MemoryRegion because ... FIXME
   Graph(Graph&& orig, std::string_view what) :
+    // Call unregister_memory_region for the memory region stored in the second base class, MemoryRegionOwner,
+    // before moving the first base class, ItemTemplate<GraphTracker>. This is necessary because debug code in
+    // unregister_memory_region wants to print the 'what' attribute of the memory region owner associated with
+    // the memory region being removed. Printing this accessing the tracker_ in ItemTemplate<GraphTracker>,
+    // which therefore may not yet be moved.
     ItemTemplate<GraphTracker>((Item::current_graph_linker_.unregister_memory_region(orig.registered_memory_region_), std::move(orig))),
     MemoryRegionOwner(std::move(orig), {}),
     node_trackers_(std::move(orig.node_trackers_)),
