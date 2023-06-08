@@ -4,9 +4,6 @@
 
 namespace cppgraphviz {
 
-//static
-thread_local MemoryRegionToOwnerLinker Item::current_graph_linker_;
-
 void Item::set_parent_graph_tracker(std::weak_ptr<GraphTracker> parent_graph_tracker)
 {
   DoutEntering(dc::notice, "set_parent_graph_tracker(" << parent_graph_tracker << ") [" << this << "]");

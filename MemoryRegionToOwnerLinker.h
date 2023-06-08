@@ -3,6 +3,7 @@
 #include "dot/Node.h"
 #include "MemoryRegionOwner.h"
 #include "GraphTracker.h"
+#include "utils/Singleton.h"
 
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;
@@ -91,6 +92,15 @@ class MemoryRegionToOwnerLinker
   void print_on_with_indentation(std::ostream& os, std::string indentation) const;
   void print_on(std::ostream& os) const { print_on_with_indentation(os, {}); }
 #endif
+};
+
+class MemoryRegionToOwnerLinkerSingleton : public Singleton<MemoryRegionToOwnerLinkerSingleton>, public MemoryRegionToOwnerLinker
+{
+  friend_Instance;
+ private:
+  MemoryRegionToOwnerLinkerSingleton() = default;
+  ~MemoryRegionToOwnerLinkerSingleton() = default;
+  MemoryRegionToOwnerLinkerSingleton(MemoryRegionToOwnerLinkerSingleton const&) = delete;
 };
 
 } // namespace cppgraphviz

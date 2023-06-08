@@ -19,9 +19,6 @@ class Item
   std::weak_ptr<GraphTracker> root_graph_tracker_;      // The root graph of this Item.
   std::weak_ptr<GraphTracker> parent_graph_tracker_;    // The graph that this Item was added to.
 
-  friend class MemoryRegionOwner;
-  static thread_local MemoryRegionToOwnerLinker current_graph_linker_;
-
  private:
   void extract_root_graph();
 
@@ -38,7 +35,7 @@ class Item
   // This is used by Node that is a member of a class.
   Item(Item* object)
   {
-    current_graph_linker_.inform_owner_of(object);      // This sets parent_graph_tracker_.
+    MemoryRegionToOwnerLinkerSingleton::instance().inform_owner_of(object);      // This sets parent_graph_tracker_.
     extract_root_graph();
   }
 
@@ -47,8 +44,9 @@ class Item
   Item(std::weak_ptr<GraphTracker> const& root_graph_tracker, Item* object, dot::NodePtr* node_ptr_ptr = nullptr) :
     root_graph_tracker_(root_graph_tracker)
   {
-    // This call sets parent_graph_tracker_ if object is found in a registered memory region.
-    current_graph_linker_.inform_owner_of(object, node_ptr_ptr);
+    // This call sets parent_graph_tracker_ if object is found in a registered memory region
+    // (i.e. an indexed container that is added to the root graph).
+    MemoryRegionToOwnerLinkerSingleton::instance().inform_owner_of(object, node_ptr_ptr);
     // If object does not fall into a registered memory region, then it has to be added to the root graph.
     if (parent_graph_tracker_.use_count() == 0)
       parent_graph_tracker_ = root_graph_tracker;

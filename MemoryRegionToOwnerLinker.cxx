@@ -114,7 +114,6 @@ void MemoryRegionToOwnerLinker::inform_owner_of(
 void MemoryRegionToOwnerLinker::register_new_memory_region_for(MemoryRegion memory_region, std::weak_ptr<MemoryRegionOwnerTracker> const& owner)
 {
   DoutEntering(dc::notice, "register_new_memory_region_for(" << memory_region << ", " << owner << ")");
-  Dout(dc::notice, "before:\n" << *this);
 
   // MemoryRegionToOwner, MemoryRegionToOwnerLinker
   MemoryRegionToOwner memory_region_to_owner(memory_region, owner);
@@ -154,3 +153,6 @@ void MemoryRegionToOwnerLinker::print_on_with_indentation(std::ostream& os, std:
 #endif
 
 } // namespace cppgraphviz
+
+// Instantiate the singleton.
+static SingletonInstance<cppgraphviz::MemoryRegionToOwnerLinkerSingleton> dummy;
