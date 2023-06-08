@@ -55,8 +55,6 @@ bool MemoryRegionToOwnerLinker::erase_memory_region_to_owner(MemoryRegion const&
   if (iter == memory_region_to_owner_map_.end())
     return false;
 
-  Dout(dc::notice, "before:\n" << *this);
-
   // The first time we have a match it is either an exact match, or it contains
   // the region that we are looking for. In the latter can we can't call
   // iter->second.erase_memory_region_to_owner(memory_region) because that would
@@ -131,9 +129,14 @@ void MemoryRegionToOwnerLinker::unregister_memory_region(MemoryRegion memory_reg
 {
   DoutEntering(dc::notice, "unregister_memory_region(" << memory_region << ")");
 
-  bool success = erase_memory_region_to_owner(memory_region);
-  // Paranoia check.
-  ASSERT(success);
+  // It is possible that we fail to remove a memory region because it fell inside
+  // another memory region that was already removed. This happens because when
+  // *moving* a class, the order in which the move-constructors are being called
+  // is dictated by the construction order (base classes first, left to right, and
+  // then the members of the class). Destruction happens in reverse order.
+  // As a result, the move-constructors "destruct" (remove) the memory regions in
+  // the "wrong" order.
+  (void)erase_memory_region_to_owner(memory_region);
 }
 
 #ifdef CWDEBUG
