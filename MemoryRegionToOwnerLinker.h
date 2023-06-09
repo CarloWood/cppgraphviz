@@ -4,6 +4,7 @@
 #include "MemoryRegionOwner.h"
 #include "GraphTracker.h"
 #include "utils/Singleton.h"
+#include "threadsafe/aithreadsafe.h"
 
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;
@@ -94,13 +95,17 @@ class MemoryRegionToOwnerLinker
 #endif
 };
 
-class MemoryRegionToOwnerLinkerSingleton : public Singleton<MemoryRegionToOwnerLinkerSingleton>, public MemoryRegionToOwnerLinker
+class MemoryRegionToOwnerLinkerSingleton : public Singleton<MemoryRegionToOwnerLinkerSingleton>
 {
   friend_Instance;
  private:
   MemoryRegionToOwnerLinkerSingleton() = default;
   ~MemoryRegionToOwnerLinkerSingleton() = default;
   MemoryRegionToOwnerLinkerSingleton(MemoryRegionToOwnerLinkerSingleton const&) = delete;
+
+ public:
+  using linker_type = aithreadsafe::Wrapper<MemoryRegionToOwnerLinker, aithreadsafe::policy::Primitive<std::mutex>>;
+  linker_type linker_;
 };
 
 } // namespace cppgraphviz
