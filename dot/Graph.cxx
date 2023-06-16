@@ -5,27 +5,6 @@
 
 namespace cppgraphviz::dot {
 
-void GraphItem::add_graph_item(Item const* item)
-{
-  auto ibp = items_.try_emplace(item->dot_id(), item);
-  // Do not add the same graph item twice.
-  ASSERT(ibp.second);
-  if (item->is_graph())
-  {
-    auto& subgraph = static_cast<ConstItemPtrTemplate<GraphItem>&>(ibp.first->second);
-    // The subgraph must be of the same type as this graph.
-    subgraph.item().set_digraph(digraph_);
-    subgraph.item().set_rankdir(rankdir_);
-  }
-}
-
-void GraphItem::remove_graph_item(Item const* item)
-{
-  bool erased = items_.erase(item->dot_id());
-  // That's unexpected... we shouldn't be calling remove_graph_item unless it is there.
-  ASSERT(erased);
-}
-
 void GraphItem::add_node_attribute(Attribute&& attribute)
 {
   node_attribute_list_.add(std::move(attribute));
@@ -45,10 +24,12 @@ void GraphItem::set_digraph(bool digraph) const
     for (auto& graph_pair : items_)
     {
       ConstItemPtr const& item_ptr = graph_pair.second;
-      if (!item_ptr.item().is_graph())
+      ConstItemPtr::unlocked_type::crat item_ptr_r{item_ptr.item()};
+      if (!item_ptr_r->is_graph())
         continue;
       ConstItemPtrTemplate<GraphItem> const& graph = static_cast<ConstItemPtrTemplate<GraphItem> const&>(item_ptr);
-      graph->set_digraph(digraph);
+      unlocked_type::crat graph_r(graph.item());
+      graph_r->set_digraph(digraph);
     }
   }
 }
@@ -62,10 +43,12 @@ void GraphItem::set_rankdir(RankDir rankdir) const
     for (auto& graph_pair : items_)
     {
       ConstItemPtr const& item_ptr = graph_pair.second;
-      if (!item_ptr.item().is_graph())
+      ConstItemPtr::unlocked_type::crat item_ptr_r{item_ptr.item()};
+      if (!item_ptr_r->is_graph())
         continue;
       ConstItemPtrTemplate<GraphItem> const& graph = static_cast<ConstItemPtrTemplate<GraphItem> const&>(item_ptr);
-      graph->set_rankdir(rankdir);
+      unlocked_type::crat graph_r(graph.item());
+      graph_r->set_rankdir(rankdir);
     }
   }
 }
@@ -126,9 +109,9 @@ void GraphItem::write_body_to(std::ostream& os, std::string indentation) const
     std::ostringstream oss;
     if (digraph_)
       oss << digraph;
-    Item const& item = item_pair.second.item();
-    item.write_dot_to(oss, indentation);
-    auto ibp = output.try_emplace(item.item_type());
+    Item::unlocked_type::crat item_r(item_pair.second.item());
+    item_r->write_dot_to(oss, indentation);
+    auto ibp = output.try_emplace(item_r->item_type());
     ibp.first->second.append(oss.str());
   }
 

@@ -30,8 +30,9 @@ class GraphTracker : public ItemTracker<Graph>
 
   void set_what(std::string_view what)
   {
-    graph_ptr_->attribute_list().remove("what");
-    graph_ptr_->attribute_list().add({"what", what});
+    dot::GraphPtr::unlocked_type::wat graph_ptr_w{graph_ptr_.item()};
+    graph_ptr_w->attribute_list().remove("what");
+    graph_ptr_w->attribute_list().add({"what", what});
   }
 
   // Accessors.

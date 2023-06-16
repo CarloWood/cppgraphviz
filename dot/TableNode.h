@@ -26,6 +26,9 @@ concept ConceptSizeTIndexableContainer = requires(T t)
 
 class TableNodeItem : public Item
 {
+ public:
+  using unlocked_type = threadsafe::Unlocked<TableNodeItem, ItemLockingPolicy>;
+
  private:
   std::vector<TableElement> copied_elements_;
   std::function<size_t()> container_size_;
@@ -33,7 +36,7 @@ class TableNodeItem : public Item
 
  public:
   // The link_container member functions store a reference to `container`,
-  // which may therefore not be moved anymore after this call.
+  // which may therefore not be moved, or destroyed after this call.
 
   template<ConceptIndexableContainer Container>
   void link_container(Container& container)
@@ -78,7 +81,7 @@ class TableNodeItem : public Item
   void for_all_elements(std::function<void(NodeItem&)> callback)
   {
     for (size_t i = 0; i < container_size_(); ++i)
-      callback(container_reference_(i).node_ptr().item());
+      callback(*NodePtr::unlocked_type::wat{container_reference_(i).node_ptr().item()});
   }
 
   item_type_type item_type() const override { return item_type_table_node; }
@@ -90,7 +93,7 @@ concept ConceptIsTableNodeItem = std::is_base_of_v<TableNodeItem, T>;
 
 struct TableNodePtr : public ItemPtrTemplate<TableNodeItem>
 {
-  Port operator[](size_t index) const { return item().at(index); }
+  Port operator[](size_t index) const { return TableNodePtr::unlocked_type::crat{item()}->at(index); }
 };
 
 } // namespace cppgraphviz::dot

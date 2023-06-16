@@ -41,8 +41,9 @@ class NodeTracker : public ItemTracker<Node>
 
   void set_what(std::string_view what)
   {
-    node_ptr_->attribute_list().remove("what");
-    node_ptr_->attribute_list().add({"what", what});
+    dot::NodePtr::unlocked_type::wat node_item_w(node_ptr_.item());
+    node_item_w->attribute_list().remove("what");
+    node_item_w->attribute_list().add({"what", what});
   }
 
   // Accessors.

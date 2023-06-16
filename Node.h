@@ -57,15 +57,16 @@ class Node : public ItemTemplate<NodeTracker>
   {
     DoutEntering(dc::notice, "Node(Node const& " << &other << ", \"" << what << "\") [" << this << "]");
     tracker_->set_what(what);
+    std::shared_ptr<GraphTracker> graph_tracker = parent_graph_tracker();
     // Node's that are added to a TableNode are not added to a Graph.
-    if (has_parent_graph())
-      get_parent_graph().add_node(tracker_);
+    if (graph_tracker)
+      graph_tracker->tracked_object().add_node(tracker_);
   }
 
   Node(Node const& other) : ItemTemplate(other.root_graph_tracker(), this)
   {
     DoutEntering(dc::notice, "default Node(Node const& " << &other << ") [" << this << "]");
-    std::string_view what = other.tracker_->node_ptr()->attribute_list().get_value("what");
+    std::string_view what = dot::NodePtr::unlocked_type::crat{other.tracker_->node_ptr().item()}->attribute_list().get_value("what");
     tracker_->set_what(what);
     get_parent_graph().add_node(tracker_);
   }
@@ -86,7 +87,7 @@ class Node : public ItemTemplate<NodeTracker>
   void initialize() override
   {
     // Add the attributes of this Node.
-    item_attributes(tracker_->node_ptr().attribute_list());
+    item_attributes(dot::NodePtr::unlocked_type::wat{tracker_->node_ptr().item()}->attribute_list());
   }
 
 #ifdef CWDEBUG

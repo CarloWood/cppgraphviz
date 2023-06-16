@@ -40,16 +40,18 @@ class IndexedContainerSet
  public:
   IndexedContainerSet(std::string_view what)
   {
-    outer_subgraph_->add_attribute({"what", std::string{what} + ".outer_subgraph_"});
-    inner_subgraph_->add_attribute({"what", std::string{what} + ".inner_subgraph_"});
-    outer_subgraph_->add_attribute({"cluster", "true"});
-    outer_subgraph_->add_attribute({"style", "rounded"});
-    outer_subgraph_->add_attribute({"color", "lightblue"});
-    outer_subgraph_->add(inner_subgraph_);
-    inner_subgraph_->add_attribute({"cluster", "false"});
+    detail::RankdirGraph::unlocked_type::wat outer_subgraph_w{outer_subgraph_.item()};
+    dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
+    outer_subgraph_w->add_attribute({"what", std::string{what} + ".outer_subgraph_"});
+    inner_subgraph_w->add_attribute({"what", std::string{what} + ".inner_subgraph_"});
+    outer_subgraph_w->add_attribute({"cluster", "true"});
+    outer_subgraph_w->add_attribute({"style", "rounded"});
+    outer_subgraph_w->add_attribute({"color", "lightblue"});
+    outer_subgraph_w->add(inner_subgraph_);
+    inner_subgraph_w->add_attribute({"cluster", "false"});
     // We have to assume the default rankdir=TB and will adjust if set_rankdir is called with LR or RL.
-    inner_subgraph_->add_attribute({"rank", "same"});
-    outer_subgraph_->set_owner(this);
+    inner_subgraph_w->add_attribute({"rank", "same"});
+    outer_subgraph_w->set_owner(this);
   }
 
   IndexedContainerSet(std::string const& label, std::string_view what) : IndexedContainerSet(what)
@@ -59,17 +61,20 @@ class IndexedContainerSet
 
   void set_label(std::string const& label)
   {
-    outer_subgraph_->add_attribute({"label", label});
+    detail::RankdirGraph::unlocked_type::wat outer_subgraph_w{outer_subgraph_.item()};
+    outer_subgraph_w->add_attribute({"label", label});
   }
 
   void add_container(dot::TableNodePtr const& container)
   {
-    inner_subgraph_->add(container);
+    dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
+    inner_subgraph_w->add(container);
   }
 
   void add_container(dot::TableNodePtr&& container)
   {
-    inner_subgraph_->add(std::move(container));
+    dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
+    inner_subgraph_w->add(std::move(container));
   }
 
   void add_to_graph(dot::GraphItem& graph_item);
@@ -77,15 +82,17 @@ class IndexedContainerSet
 
   void rankdir_changed(dot::RankDir new_rankdir)
   {
-    dot::RankDir old_rankdir = outer_subgraph_->get_rankdir();
+    detail::RankdirGraph::unlocked_type::crat outer_subgraph_r{outer_subgraph_.item()};
+    dot::RankDir old_rankdir = outer_subgraph_r->get_rankdir();
     bool old_is_vertical = old_rankdir == dot::TB || old_rankdir == dot::BT;
     bool new_is_vertical = new_rankdir == dot::TB || new_rankdir == dot::BT;
     if (old_is_vertical != new_is_vertical)
     {
+      dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
       if (new_is_vertical)
-        inner_subgraph_->add_attribute({"rank", "same"});
+        inner_subgraph_w->add_attribute({"rank", "same"});
       else
-        inner_subgraph_->attribute_list().remove("rank");
+        inner_subgraph_w->attribute_list().remove("rank");
     }
   }
 };

@@ -11,6 +11,10 @@ namespace cppgraphviz::dot {
 // both of which are provided by Item.
 class NodeItem : public Item
 {
+ public:
+  using unlocked_type = threadsafe::Unlocked<NodeItem, ItemLockingPolicy>;
+
+ private:
   item_type_type item_type() const override { return item_type_node; }
   void write_dot_to(std::ostream& os, std::string& indentation) const override;
 };

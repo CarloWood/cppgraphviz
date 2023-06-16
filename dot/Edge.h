@@ -9,6 +9,9 @@ namespace cppgraphviz::dot {
 
 class EdgeItem : public Item
 {
+ public:
+  using unlocked_type = threadsafe::Unlocked<EdgeItem, ItemLockingPolicy>;
+
  private:
   // The nodes of this edge.
   Port from_;
@@ -31,7 +34,7 @@ concept ConceptIsEdgeItem = std::is_base_of_v<EdgeItem, T>;
 struct EdgePtr : public ItemPtrTemplate<EdgeItem>
 {
   EdgePtr() = default;
-  EdgePtr(Port const& from, Port const& to) { item().set_nodes(from, to); }
+  EdgePtr(Port const& from, Port const& to) { unlocked_type::wat{item()}->set_nodes(from, to); }
 };
 
 static_assert(sizeof(EdgePtr) == sizeof(ItemPtr), "EdgePtr may not have any additional members!");

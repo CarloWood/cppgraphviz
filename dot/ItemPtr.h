@@ -3,12 +3,13 @@
 #include "AttributeList.h"
 #include "Item.h"
 #include <utils/Badge.h>
+#include <threadsafe/threadsafe.h>
 #include <boost/intrusive_ptr.hpp>
 #include <concepts>
 
 namespace cppgraphviz::dot {
 
-// A wrapper around a boost::intrusive_ptr<Item>.
+// A wrapper around a boost::intrusive_ptr<Item, ItemLockingPolicy>.
 //
 // ItemPtr's can be cheaply moved and even copied: changes made
 // to one ItemPtr affect all other ItemPtr that are/were copies.
@@ -17,14 +18,18 @@ namespace cppgraphviz::dot {
 // a base class of either GraphItem, NodeItem or EdgeItem.
 class ConstItemPtr
 {
+ public:
+  using unlocked_type = Item::unlocked_type;
+
  protected:
   // Use a smart pointer to the actual data, so that ItemPtr remains movable and copyable.
-  boost::intrusive_ptr<Item> shared_item_ptr_;
+  // Note that unlocked_type increments a reference count because Item is derived from AIRefCount.
+  unlocked_type shared_item_ptr_;
 
  public:
   // Create a ConstItemPtr that points to an existing Item object.
   // Increment the reference count of the Item to keep it alive.
-  ConstItemPtr(Item const* ptr) : shared_item_ptr_(const_cast<Item*>(ptr)) { }
+  ConstItemPtr(unlocked_type const& item) : shared_item_ptr_(const_cast<unlocked_type&>(item)) { }
 
   // Derived classes have virtual functions.
   // Allow destruction by (base class) pointer in case this object was allocated with new.
@@ -41,10 +46,11 @@ class ConstItemPtr
   ConstItemPtr& operator=(ConstItemPtr const&) = default;
 
   // Accessor for the pointed-to Item. Only give const- access.
-  Item const& item() const { return *shared_item_ptr_; }
+  unlocked_type const& item() const { return shared_item_ptr_; }
 
   // Give access to the attribute list of the item, allowing the user to read attributes.
-  AttributeList const& attribute_list() const { return shared_item_ptr_->attribute_list(); }
+//FIXME: do not use this member function, instead use: unlocked_type::rat{item()}->attribute_list().
+//  AttributeList const& attribute_list() const { return shared_item_ptr_->attribute_list(); }
 };
 
 class ItemPtr : public ConstItemPtr
@@ -53,38 +59,43 @@ class ItemPtr : public ConstItemPtr
   // Create a pointer to a new graph item.
   template<typename T>
   requires std::derived_from<T, Item>
-  ItemPtr(std::type_identity<T>) : ConstItemPtr(new T) { }
+  ItemPtr(std::type_identity<T>) : ConstItemPtr(new threadsafe::Unlocked<T, ItemLockingPolicy>) { }
 
   // Increment reference count of the item and become a pointer to it.
-  ItemPtr(Item* item) : ConstItemPtr(item) { }
+  ItemPtr(unlocked_type item) : ConstItemPtr(item) { }
 
   // Give access to the attribute list of the item, allowing the user to add attributes.
-  using ConstItemPtr::attribute_list;
-  AttributeList& attribute_list() { return shared_item_ptr_->attribute_list(); }
+//  using ConstItemPtr::attribute_list;
+//FIXME: do not use this member function, instead use: unlocked_type::wat{item()}->attribute_list().
+//  AttributeList& attribute_list() { return shared_item_ptr_->attribute_list(); }
 
   // Accessors.
   using ConstItemPtr::item;
-  Item& item() { return *shared_item_ptr_; }
+  unlocked_type& item() { return shared_item_ptr_; }
 };
 
 template<typename T>
 struct ItemPtrTemplate : ItemPtr
 {
   using item_type = T;
+  using unlocked_type = typename T::unlocked_type;
 
-  ItemPtrTemplate() : ItemPtr(new T) { }
+  ItemPtrTemplate() : ItemPtr(*boost::intrusive_ptr<unlocked_type>(new unlocked_type)) { }
 
   // Accessors.
-  T const& item() const { return static_cast<T const&>(*this->shared_item_ptr_); }
-  T& item() { return static_cast<T&>(*this->shared_item_ptr_); }
+  unlocked_type const& item() const { return unlocked_cast<unlocked_type const&>(this->shared_item_ptr_); }
+  unlocked_type& item() { return unlocked_cast<unlocked_type&>(this->shared_item_ptr_); }
 
-  T const* operator->() const { return static_cast<T const*>(this->shared_item_ptr_.get()); }
-  T* operator->() { return static_cast<T*>(this->shared_item_ptr_.get()); }
+//  unlocked_type const* operator->() const { return static_cast<T const*>(this->shared_item_ptr_.get()); }
+//  unlocked_type* operator->() { return static_cast<T*>(this->shared_item_ptr_.get()); }
 };
 
 template<typename T>
 struct ConstItemPtrTemplate : ConstItemPtr
 {
+  using item_type = T;
+  using unlocked_type = threadsafe::Unlocked<T, ItemLockingPolicy>;
+
   ConstItemPtrTemplate(T const* item) : ConstItemPtr(item) { }
 
   // Automatic conversion from ItemPtrTemplate.
@@ -92,9 +103,9 @@ struct ConstItemPtrTemplate : ConstItemPtr
   ConstItemPtrTemplate(ItemPtrTemplate<T>&& other) : ConstItemPtr(std::move(other)) { }
 
   // Accessor.
-  T const& item() const { return static_cast<T const&>(*shared_item_ptr_); }
+  unlocked_type const& item() const { return unlocked_cast<unlocked_type const&>(shared_item_ptr_); }
 
-  T const* operator->() const { return static_cast<T const*>(this->shared_item_ptr_.get()); }
+//  T const* operator->() const { return static_cast<T const*>(this->shared_item_ptr_.get()); }
 };
 
 } // namespace cppgraphviz::dot

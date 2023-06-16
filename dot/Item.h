@@ -2,9 +2,17 @@
 
 #include "ItemID.h"
 #include "item_types.h"
-#include <utils/AIRefCount.h>
+#include <threadsafe/threadsafe.h>
+#include <threadsafe/AIMutex.h>
+#include "debug.h"
 
 namespace cppgraphviz::dot {
+
+#if CW_DEBUG
+using ItemLockingPolicy = threadsafe::policy::Primitive<AIMutex>;
+#else
+using ItemLockingPolicy = threadsafe::policy::Primitive<std::mutex>;
+#endif
 
 class GraphItem;
 
@@ -14,6 +22,7 @@ class GraphItem;
 class Item : public AIRefCount, public ItemID
 {
  public:
+  using unlocked_type = threadsafe::UnlockedBase<Item, ItemLockingPolicy>;
   using graph_item_type = GraphItem;
 
   Item() : ItemID(s_unique_id_context.get_id()) { }

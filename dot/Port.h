@@ -16,7 +16,8 @@ class Port
 
  public:
   Port() = default;
-  Port(NodePtr const& node_ptr);
+  Port(NodePtr::unlocked_type::crat const& node_item_r);
+  Port(NodePtr const& node_ptr) : Port(NodePtr::unlocked_type::crat{node_ptr.item()}) { }
   Port(ID_type id, size_t port) : id_(id), port_(port) { }
 
   void set_port(ID_type id) { id_ = id; port_.reset(); }

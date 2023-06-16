@@ -3,6 +3,7 @@
 #include "dot/AttributeList.h"
 #include "MemoryRegionToOwnerLinker.h"
 #include "utils/Badge.h"
+#include "utils/AIRefCount.h"
 #ifdef CWDEBUG
 #include "debug_ostream_operators.h"
 #endif
@@ -96,10 +97,12 @@ class Item
     return *parent_graph_tracker;
   }
 
+#if 0 //FIXME: remove - this is not thread-safe.
   bool has_parent_graph() const
   {
     return parent_graph_tracker_.use_count() > 0;
   }
+#endif
 
   std::weak_ptr<GraphTracker> const& root_graph_tracker() const { return root_graph_tracker_; }
 

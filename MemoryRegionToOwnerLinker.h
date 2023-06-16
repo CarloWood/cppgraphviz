@@ -4,7 +4,7 @@
 #include "MemoryRegionOwner.h"
 #include "GraphTracker.h"
 #include "utils/Singleton.h"
-#include "threadsafe/aithreadsafe.h"
+#include "threadsafe/threadsafe.h"
 
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;
@@ -104,7 +104,7 @@ class MemoryRegionToOwnerLinkerSingleton : public Singleton<MemoryRegionToOwnerL
   MemoryRegionToOwnerLinkerSingleton(MemoryRegionToOwnerLinkerSingleton const&) = delete;
 
  public:
-  using linker_type = aithreadsafe::Wrapper<MemoryRegionToOwnerLinker, aithreadsafe::policy::Primitive<std::mutex>>;
+  using linker_type = threadsafe::Unlocked<MemoryRegionToOwnerLinker, threadsafe::policy::Primitive<std::mutex>>;
   linker_type linker_;
 };
 

@@ -19,12 +19,12 @@ class TableElement
 
   std::string_view label() const
   {
-    return node_ptr_.item().attribute_list().get("label", "<no label>");
+    return NodePtr::unlocked_type::crat{node_ptr_.item()}->attribute_list().get("label", "<no label>");
   }
 
   AttributeList const& attribute_list() const
   {
-    return node_ptr_.item().attribute_list();
+    return NodePtr::unlocked_type::crat{node_ptr_.item()}->attribute_list();
   }
 
   NodePtr const& node_ptr() const

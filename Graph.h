@@ -121,7 +121,7 @@ class Graph : public ItemTemplate<GraphTracker>, public MemoryRegionOwner
   void initialize() override
   {
     // Add the attributes of this Node.
-    item_attributes(tracker_->graph_ptr().attribute_list());
+    item_attributes(dot::GraphPtr::unlocked_type::wat{tracker_->graph_ptr().item()}->attribute_list());
     call_initialize_on_items();
   }
 

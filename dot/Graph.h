@@ -42,10 +42,13 @@ concept ConceptHasRemoveFromGraph = requires(T obj)
 // A graph contains a list of nodes, edges and (optionally) other (sub)graphs.
 class GraphItem : public Item
 {
+ public:
+  using unlocked_type = threadsafe::Unlocked<GraphItem, ItemLockingPolicy>;
+
  private:
   // Configuration.
-  mutable bool digraph_ = false;
-  mutable RankDir rankdir_ = TB;
+  mutable std::atomic<bool> digraph_ = false;
+  mutable std::atomic<RankDir> rankdir_ = TB;
   bool strict_ = false;
   bool concentrate_ = false;
 
@@ -76,19 +79,58 @@ class GraphItem : public Item
   RankDir get_rankdir() const { return rankdir_; }
 
   //---------------------------------------------------------------------------
-  void add_graph_item(Item const* item);
-  void remove_graph_item(Item const* item);
+
+  template<typename ACCESS_TYPE>
+  void add_graph_item(typename ACCESS_TYPE::unlocked_type::crat const& item_r, Item::unlocked_type const& item)
+  {
+    DoutEntering(dc::notice, "dot::GraphItem::add_graph_item(" << item_r->attribute_list().get_value("what") <<
+        " [" << item_r->dot_id() << "]) [" << this << " [" << attribute_list().get_value("what") << "]]");
+
+    auto ibp = items_.try_emplace(item_r->dot_id(), item);
+    // Do not add the same graph item twice.
+    ASSERT(ibp.second);
+    if constexpr (std::is_base_of_v<std::remove_cvref_t<decltype(*item_r)>, GraphItem>)
+    {
+      if (item_r->is_graph())
+      {
+        GraphItem const& subgraph = static_cast<GraphItem const&>(*item_r);
+        // The subgraph must be of the same type as this graph.
+        subgraph.set_digraph(digraph_);
+        subgraph.set_rankdir(rankdir_);
+      }
+    }
+  }
+
+  template<typename ACCESS_TYPE>
+  void remove_graph_item(typename ACCESS_TYPE::unlocked_type::crat const& item_r)
+  {
+    DoutEntering(dc::notice, "dot::GraphItem::remove_graph_item(" << item_r->attribute_list().get_value("what") <<
+        " [" << item_r->dot_id() << "]) [" << this << " [" << attribute_list().get_value("what") << "]]");
+    bool erased = items_.erase(item_r->dot_id());
+    // That's unexpected... we shouldn't be calling remove_graph_item unless it is there.
+    ASSERT(erased);
+  }
+
+  template<typename ACCESS_TYPE>
+  void add(ItemPtr const& item_ptr, ACCESS_TYPE const& item_r)
+  {
+    add_graph_item<ACCESS_TYPE>(item_r, item_ptr.item());
+  }
+
+  template<typename ACCESS_TYPE>
+  void remove(ACCESS_TYPE const& item_r)
+  {
+    remove_graph_item<ACCESS_TYPE>(item_r);
+  }
 
   void add(ItemPtr const& item_ptr)
   {
-    DoutEntering(dc::notice, "dot::GraphItem::add(" << item_ptr.item().attribute_list().get_value("what") << " [" << item_ptr.item().dot_id() << "]) [" << this << " [" << attribute_list().get_value("what") << "]]");
-    add_graph_item(&item_ptr.item());
+    add(item_ptr, Item::unlocked_type::crat{item_ptr.item()});
   }
 
   void remove(ItemPtr const& item_ptr)
   {
-    DoutEntering(dc::notice, "dot::GraphItem::remove(" << item_ptr.item().attribute_list().get_value("what") << " [" << item_ptr.item().dot_id() << "]) [" << this << " [" << attribute_list().get_value("what") << "]]");
-    remove_graph_item(&item_ptr.item());
+    remove(Item::unlocked_type::crat{item_ptr.item()});
   }
 
   template<ConceptHasAddToGraph T>
@@ -115,14 +157,16 @@ class GraphPtr : public ItemPtrTemplate<GraphItem>
  public:
   GraphPtr(bool strict = false)
   {
-    item().set_strict(strict);
+    unlocked_type::wat item_w{item()};
+    item_w->set_strict(strict);
   }
 
  protected:
   GraphPtr(bool digraph, bool strict = false)
   {
-    item().set_digraph(digraph);
-    item().set_strict(strict);
+    unlocked_type::wat item_w{item()};
+    item_w->set_digraph(digraph);
+    item_w->set_strict(strict);
   }
 };
 
