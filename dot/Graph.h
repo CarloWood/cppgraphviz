@@ -83,7 +83,7 @@ class GraphItem : public Item
   template<typename ACCESS_TYPE>
   void add_graph_item(typename ACCESS_TYPE::unlocked_type::crat const& item_r, Item::unlocked_type const& item)
   {
-    DoutEntering(dc::notice, "dot::GraphItem::add_graph_item(" << item_r->attribute_list().get_value("what") <<
+    DoutEntering(dc::notice, "dot::GraphItem::add_graph_item(" << item_r->attribute_list().get("what", "<NO WHAT>") <<
         " [" << item_r->dot_id() << "]) [" << this << " [" << attribute_list().get_value("what") << "]]");
 
     auto ibp = items_.try_emplace(item_r->dot_id(), item);
