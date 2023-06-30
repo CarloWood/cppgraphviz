@@ -25,7 +25,7 @@ void Graph::remove_node(std::shared_ptr<NodeTracker>&& node_tracker)
         auto sp = wp.lock();
         return !sp || sp == node_tracker;
       });
-  tracker_->graph_ptr()->remove(node_tracker->node_ptr());
+  dot::GraphPtr::unlocked_type::wat{tracker_->graph_ptr().item()}->remove(node_tracker->node_ptr());
 }
 
 void Graph::add_graph(std::weak_ptr<GraphTracker> weak_graph_tracker)
@@ -33,7 +33,7 @@ void Graph::add_graph(std::weak_ptr<GraphTracker> weak_graph_tracker)
   std::shared_ptr<GraphTracker> graph_tracker = weak_graph_tracker.lock();
   if (graph_tracker)
   {
-    tracker_->graph_ptr()->add(graph_tracker->graph_ptr());
+    dot::GraphPtr::unlocked_type::wat{tracker_->graph_ptr().item()}->add(graph_tracker->graph_ptr());
     graph_trackers_.push_back(std::move(weak_graph_tracker));
     graph_tracker->tracked_object().set_parent_graph_tracker(tracker_);
   }
@@ -48,7 +48,7 @@ void Graph::remove_graph(std::shared_ptr<GraphTracker>&& graph_tracker)
         auto sp = wp.lock();
         return !sp || sp == graph_tracker;
       });
-  tracker_->graph_ptr()->remove(graph_tracker->graph_ptr());
+  dot::GraphPtr::unlocked_type::wat{tracker_->graph_ptr().item()}->remove(graph_tracker->graph_ptr());
 }
 
 void Graph::add_array(std::weak_ptr<MemoryRegionOwnerTracker> weak_array_tracker)
@@ -105,7 +105,7 @@ void Graph::call_initialize_on_items() const
 void Graph::write_dot(std::ostream& os) const
 {
   call_initialize_on_items();
-  tracker_->graph_ptr()->write_dot(os);
+  dot::GraphPtr::unlocked_type::rat{tracker_->graph_ptr().item()}->write_dot(os);
 }
 
 #ifdef CWDEBUG
@@ -119,7 +119,7 @@ void Graph::print_on(std::ostream& os) const
   ASSERT(graph_tracker2);
 #endif
 
-  os << '"' << tracker().graph_ptr().item().attribute_list().get("what", "<NO \"what\">") << '"';
+  os << '"' << dot::GraphPtr::unlocked_type::crat{tracker().graph_ptr().item()}->attribute_list().get("what", "<NO \"what\">") << '"';
 }
 #endif
 

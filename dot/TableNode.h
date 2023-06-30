@@ -78,10 +78,10 @@ class TableNodeItem : public Item
     return {dot_id(), index};
   }
 
-  void for_all_elements(std::function<void(NodeItem&)> callback)
+  void for_all_elements(std::function<void()> callback)
   {
     for (size_t i = 0; i < container_size_(); ++i)
-      callback(*NodePtr::unlocked_type::wat{container_reference_(i).node_ptr().item()});
+      callback();
   }
 
   item_type_type item_type() const override { return item_type_table_node; }

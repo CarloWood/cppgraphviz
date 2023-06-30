@@ -15,14 +15,17 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
   DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(" << root_graph << ", " <<
       (void*)begin << ", " << element_size << ", " << number_of_elements << ", index_type_info, \"" << what << "\")");
 
-  table_node_ptr_->add_attribute({"what", "ArrayMemoryRegionOwner::table_node_ptr_"});
-  // Instead of copying elements, we create new dot::NodePtr objects and use
-  // those temporarily until they can be overwritten later in on_memory_region_usage.
-  table_node_ptr_->copy_elements([](size_t i){
-        dot::NodePtr node_ptr;
-        node_ptr->add_attribute({"what", "default NodePtr for Array"});
-        return node_ptr;
-      }, number_of_elements);
+  {
+    dot::TableNodePtr::unlocked_type::wat table_node_ptr_w{table_node_ptr_.item()};
+    table_node_ptr_w->add_attribute({"what", "ArrayMemoryRegionOwner::table_node_ptr_"});
+    // Instead of copying elements, we create new dot::NodePtr objects and use
+    // those temporarily until they can be overwritten later in on_memory_region_usage.
+    table_node_ptr_w->copy_elements([](size_t i){
+          dot::NodePtr node_ptr;
+          dot::NodePtr::unlocked_type::wat{node_ptr.item()}->add_attribute({"what", "default NodePtr for Array"});
+          return node_ptr;
+        }, number_of_elements);
+  }
   std::shared_ptr<GraphTracker> root_graph_tracker = root_graph.lock();
   // Paranoia check.
   ASSERT(root_graph_tracker);
@@ -33,10 +36,10 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
   IndexedContainerSet& indexed_container_set = ibp.first->second;
   if (ibp.second)
   {
-    root_graph_tracker->graph_ptr()->insert(indexed_container_set);
+    dot::GraphPtr::unlocked_type::wat{root_graph_tracker->graph_ptr().item()}->insert(indexed_container_set);
     ibp.first->second.set_label(std::string("Array[") + demangled_index_type_name + "]");
   }
-  indexed_container_set.add_container(table_node_ptr_);
+  indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
   root_graph_tracker->tracked_object().add_array(MemoryRegionOwner::tracker_);
 }
@@ -63,14 +66,17 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& oth
   DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& " << &other << ", " <<
       (void*)begin << ", index_type_info, \"" << what << "\")");
 
-  table_node_ptr_->add_attribute({"what", "ArrayMemoryRegionOwner::table_node_ptr_"});
-  // Instead of copying elements, we create new dot::NodePtr objects and use
-  // those temporarily until they can be overwritten later in on_memory_region_usage.
-  table_node_ptr_->copy_elements([](size_t i){
-        dot::NodePtr node_ptr;
-        node_ptr->add_attribute({"what", "default NodePtr for Array"});
-        return node_ptr;
-      }, number_of_elements_);
+  {
+    dot::TableNodePtr::unlocked_type::wat table_node_w{table_node_ptr_.item()};
+    table_node_w->add_attribute({"what", "ArrayMemoryRegionOwner::table_node_ptr_"});
+    // Instead of copying elements, we create new dot::NodePtr objects and use
+    // those temporarily until they can be overwritten later in on_memory_region_usage.
+    table_node_w->copy_elements([](size_t i){
+          dot::NodePtr node_ptr;
+          dot::NodePtr::unlocked_type::wat{node_ptr.item()}->add_attribute({"what", "default NodePtr for Array"});
+          return node_ptr;
+        }, number_of_elements_);
+  }
   std::shared_ptr<GraphTracker> root_graph = root_graph_tracker().lock();
   // Paranoia check.
   ASSERT(root_graph);
@@ -79,7 +85,7 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& oth
   auto iter = index_container_sets_.find(key);
   ASSERT(iter != index_container_sets_.end());
   IndexedContainerSet& indexed_container_set = iter->second;
-  indexed_container_set.add_container(table_node_ptr_);
+  indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
   root_graph->tracked_object().add_array(MemoryRegionOwner::tracker_);
 }
@@ -106,7 +112,7 @@ void ArrayMemoryRegionOwner::on_memory_region_usage(MemoryRegion const& item_mem
   // the item has to be a NodeItem (still being constructed though).
   ASSERT(node_ptr_ptr);
   dot::NodePtr& node_ptr = *node_ptr_ptr;
-  table_node_ptr_->replace_element(index, node_ptr);
+  dot::TableNodePtr::unlocked_type::wat{table_node_ptr_.item()}->replace_element(index, node_ptr);
   // And item has to be Node.
   Node* node = static_cast<Node*>(item);
   std::weak_ptr<NodeTracker> weak_node_tracker = *node;
@@ -119,7 +125,7 @@ void ArrayMemoryRegionOwner::call_initialize_on_elements()
   DoutEntering(dc::notice, "ArrayMemoryRegionOwner::call_initialize_on_elements() [" << this << "]");
   size_t index = 0;
   // This calls the lambda for indices 0, 1, 2, ...
-  table_node_ptr_->for_all_elements([this, &index](dot::NodeItem& node_item){
+  dot::TableNodePtr::unlocked_type::wat{table_node_ptr_.item()}->for_all_elements([this, &index](){
     Dout(dc::notice, "index = " << index);
     auto node_tracker = id_to_node_map_[index].lock();
     ++index;

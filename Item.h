@@ -136,12 +136,12 @@ class ItemTemplate : public utils::TrackedObject<Tracker>, public Item
   // Return the value of the "what" attribute.
   std::string get_what() const
   {
-    dot::AttributeList const* attribute_list;
+    std::string what;
     if constexpr (std::is_same_v<Tracker, NodeTracker>)
-      attribute_list = &this->tracker_->node_ptr()->attribute_list();
+      what = std::string(dot::NodePtr::unlocked_type::crat{this->tracker_->node_ptr().item()}->attribute_list().get_value("what"));
     else
-      attribute_list = &this->tracker_->graph_ptr()->attribute_list();
-    return std::string(attribute_list->get_value("what"));
+      what = std::string(dot::GraphPtr::unlocked_type::crat{this->tracker_->graph_ptr().item()}->attribute_list().get_value("what"));
+    return what;
   }
 };
 

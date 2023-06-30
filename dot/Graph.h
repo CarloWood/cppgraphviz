@@ -86,6 +86,8 @@ class GraphItem : public Item
     DoutEntering(dc::notice, "dot::GraphItem::add_graph_item(" << item_r->attribute_list().get("what", "<NO WHAT>") <<
         " [" << item_r->dot_id() << "]) [" << this << " [" << attribute_list().get_value("what") << "]]");
 
+    typename ACCESS_TYPE::unlocked_type const& unlocked = unlocked_cast<typename ACCESS_TYPE::unlocked_type const&>(item);
+
     auto ibp = items_.try_emplace(item_r->dot_id(), item);
     // Do not add the same graph item twice.
     ASSERT(ibp.second);
@@ -96,7 +98,10 @@ class GraphItem : public Item
         GraphItem const& subgraph = static_cast<GraphItem const&>(*item_r);
         // The subgraph must be of the same type as this graph.
         subgraph.set_digraph(digraph_);
+        // set_rankdir needs to be called while item is unlocked in some cases.
+        item_r.unlock();
         subgraph.set_rankdir(rankdir_);
+        item_r.relock(unlocked);
       }
     }
   }
@@ -112,12 +117,18 @@ class GraphItem : public Item
   }
 
   template<typename ACCESS_TYPE>
+  requires utils::is_specialization_of_v<ACCESS_TYPE, threadsafe::AccessConst> ||
+           utils::is_specialization_of_v<ACCESS_TYPE, threadsafe::ConstAccess> ||
+           utils::is_specialization_of_v<ACCESS_TYPE, threadsafe::Access>
   void add(ItemPtr const& item_ptr, ACCESS_TYPE const& item_r)
   {
     add_graph_item<ACCESS_TYPE>(item_r, item_ptr.item());
   }
 
   template<typename ACCESS_TYPE>
+  requires utils::is_specialization_of_v<ACCESS_TYPE, threadsafe::AccessConst> ||
+           utils::is_specialization_of_v<ACCESS_TYPE, threadsafe::ConstAccess> ||
+           utils::is_specialization_of_v<ACCESS_TYPE, threadsafe::Access>
   void remove(ACCESS_TYPE const& item_r)
   {
     remove_graph_item<ACCESS_TYPE>(item_r);

@@ -11,6 +11,9 @@ namespace detail {
 
 class RankdirGraphData : public dot::GraphItem
 {
+ public:
+  using unlocked_type = threadsafe::Unlocked<RankdirGraphData, dot::ItemLockingPolicy>;
+
  private:
   IndexedContainerSet* owner_;
 
@@ -47,7 +50,7 @@ class IndexedContainerSet
     outer_subgraph_w->add_attribute({"cluster", "true"});
     outer_subgraph_w->add_attribute({"style", "rounded"});
     outer_subgraph_w->add_attribute({"color", "lightblue"});
-    outer_subgraph_w->add(inner_subgraph_);
+    outer_subgraph_w->add(inner_subgraph_, inner_subgraph_w);
     inner_subgraph_w->add_attribute({"cluster", "false"});
     // We have to assume the default rankdir=TB and will adjust if set_rankdir is called with LR or RL.
     inner_subgraph_w->add_attribute({"rank", "same"});
@@ -65,17 +68,25 @@ class IndexedContainerSet
     outer_subgraph_w->add_attribute({"label", label});
   }
 
+  void add_container(dot::TableNodePtr const& container, dot::TableNodePtr::unlocked_type::crat const& container_r)
+  {
+    dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
+    inner_subgraph_w->add(container, container_r);
+  }
+
   void add_container(dot::TableNodePtr const& container)
   {
     dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
     inner_subgraph_w->add(container);
   }
 
+#if 0
   void add_container(dot::TableNodePtr&& container)
   {
     dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
     inner_subgraph_w->add(std::move(container));
   }
+#endif
 
   void add_to_graph(dot::GraphItem& graph_item);
   void remove_from_graph(dot::GraphItem& graph_item);

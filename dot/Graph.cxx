@@ -27,9 +27,8 @@ void GraphItem::set_digraph(bool digraph) const
       ConstItemPtr::unlocked_type::crat item_ptr_r{item_ptr.item()};
       if (!item_ptr_r->is_graph())
         continue;
-      ConstItemPtrTemplate<GraphItem> const& graph = static_cast<ConstItemPtrTemplate<GraphItem> const&>(item_ptr);
-      unlocked_type::crat graph_r(graph.item());
-      graph_r->set_digraph(digraph);
+      GraphItem const& graph = static_cast<GraphItem const&>(*item_ptr_r);
+      graph.set_digraph(digraph);
     }
   }
 }
@@ -46,9 +45,8 @@ void GraphItem::set_rankdir(RankDir rankdir) const
       ConstItemPtr::unlocked_type::crat item_ptr_r{item_ptr.item()};
       if (!item_ptr_r->is_graph())
         continue;
-      ConstItemPtrTemplate<GraphItem> const& graph = static_cast<ConstItemPtrTemplate<GraphItem> const&>(item_ptr);
-      unlocked_type::crat graph_r(graph.item());
-      graph_r->set_rankdir(rankdir);
+      GraphItem const& graph = static_cast<GraphItem const&>(*item_ptr_r);
+      graph.set_rankdir(rankdir);
     }
   }
 }

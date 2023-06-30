@@ -6,7 +6,7 @@ namespace cppgraphviz {
 #ifdef CWDEBUG
 void Node::print_on(std::ostream& os) const
 {
-  os << '"' << tracker_->node_ptr()->attribute_list().get("what", "<NO \"what\">") << '"';
+  os << '"' << dot::NodePtr::unlocked_type::crat{tracker_->node_ptr().item()}->attribute_list().get("what", "<NO \"what\">") << '"';
 }
 #endif
 
