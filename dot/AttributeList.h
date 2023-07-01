@@ -9,7 +9,7 @@ namespace cppgraphviz::dot {
 class AttributeList
 {
  private:
-  std::set<Attribute> attributes_;
+  std::set<Attribute> attributes_;                      // FIXME: threadsafe
 
  public:
   void add(Attribute&& attribute)

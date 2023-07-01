@@ -9,8 +9,8 @@ namespace cppgraphviz::dot {
 class Attribute
 {
  private:
-  std::string key_;
-  mutable std::string value_;
+  std::string key_;                     // FIXME: threadsafe?
+  mutable std::string value_;           // FIXME: threadsafe?
 
  public:
   // Construct a 'key' Attribute, for searching.

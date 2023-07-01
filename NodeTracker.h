@@ -37,7 +37,7 @@ class NodeTracker : public ItemTracker<Node>
   dot::NodePtr node_ptr_;       // Unique pointer to the corresponding dot::NodeItem.
 
  public:
-  NodeTracker(Node* node) : ItemTracker<Node>(node) { }
+  NodeTracker(utils::Badge<utils::TrackedObject<NodeTracker>>, Node* node) : ItemTracker<Node>(node) { }
 
   void set_what(std::string_view what)
   {

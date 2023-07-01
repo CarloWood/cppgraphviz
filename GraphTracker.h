@@ -2,6 +2,7 @@
 
 #include "ItemTracker.h"
 #include "dot/Graph.h"
+#include "utils/Badge.h"
 #include <memory>
 
 namespace cppgraphviz {
@@ -25,8 +26,7 @@ class GraphTracker : public ItemTracker<Graph>
   dot::GraphPtr graph_ptr_;     // Unique pointer to the corresponding dot::GraphItem.
 
  public:
-  // Private constructor, called by create.
-  GraphTracker(Graph* graph) : ItemTracker<Graph>(graph) { }
+  GraphTracker(utils::Badge<utils::TrackedObject<GraphTracker>>, Graph* graph) : ItemTracker<Graph>(graph) { }
 
   void set_what(std::string_view what)
   {
