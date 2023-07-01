@@ -47,10 +47,6 @@ class ConstItemPtr
 
   // Accessor for the pointed-to Item. Only give const- access.
   unlocked_type const& item() const { return shared_item_ptr_; }
-
-  // Give access to the attribute list of the item, allowing the user to read attributes.
-//FIXME: do not use this member function, instead use: unlocked_type::rat{item()}->attribute_list().
-//  AttributeList const& attribute_list() const { return shared_item_ptr_->attribute_list(); }
 };
 
 class ItemPtr : public ConstItemPtr
@@ -63,11 +59,6 @@ class ItemPtr : public ConstItemPtr
 
   // Increment reference count of the item and become a pointer to it.
   ItemPtr(unlocked_type item) : ConstItemPtr(item) { }
-
-  // Give access to the attribute list of the item, allowing the user to add attributes.
-//  using ConstItemPtr::attribute_list;
-//FIXME: do not use this member function, instead use: unlocked_type::wat{item()}->attribute_list().
-//  AttributeList& attribute_list() { return shared_item_ptr_->attribute_list(); }
 
   // Accessors.
   using ConstItemPtr::item;

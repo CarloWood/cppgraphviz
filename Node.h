@@ -66,8 +66,11 @@ class Node : public ItemTemplate<NodeTracker>
   Node(Node const& other) : ItemTemplate(other.root_graph_tracker(), this)
   {
     DoutEntering(dc::notice, "default Node(Node const& " << &other << ") [" << this << "]");
-    std::string_view what = dot::NodePtr::unlocked_type::crat{other.tracker_->node_ptr().item()}->attribute_list().get_value("what");
-    tracker_->set_what(what);
+    {
+      dot::NodePtr::unlocked_type::crat node_item_r{other.tracker_->node_ptr().item()};
+      std::string_view what = node_item_r->attribute_list().get_value("what");
+      tracker_->set_what(what);
+    }
     get_parent_graph().add_node(tracker_);
   }
 

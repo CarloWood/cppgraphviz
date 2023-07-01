@@ -50,7 +50,8 @@ void TableNodeItem::write_html_to(std::ostream& os, std::string const& indentati
   for (size_t port = 0; port < size; ++port)
   {
     TableElement table_element = container_reference_(port);
-    AttributeList const& eal = table_element.attribute_list();
+    dot::NodePtr::unlocked_type::crat node_item_r{table_element.node_ptr().item()};
+    AttributeList const& eal = node_item_r->attribute_list();
     os << indentation << "    <TR><TD PORT=\"" << port << "\"";
     if (eal.has_key("bgcolor"))
       os << " BGCOLOR=\"" << eal.get_value("bgcolor") << '"';
