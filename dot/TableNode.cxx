@@ -81,7 +81,7 @@ void TableNodeItem::write_html_to(std::ostream& os, std::string const& indentati
         os << " COLOR=\"" << attribute_list().get_value("fontcolor") << "\"";
       os << '>';
     }
-    os << html_escape(table_element.label());
+    os << html_escape(eal.get("label", "<no label>"));
     if (has_font)
       os << "</FONT>";
     os << "</TD></TR>\n";
