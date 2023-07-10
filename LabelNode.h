@@ -22,10 +22,16 @@ class LabelNode : public Node
  public:
   LabelNode(std::string_view what) : Node(what) { }
   LabelNode(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) : Node(root_graph, what) { }
-  LabelNode(LabelNode&& label_node, std::string_view what) : Node(std::move(label_node), what), label_(std::move(label_node.label_)) { }
-  LabelNode(LabelNode&& label_node) : Node(std::move(label_node)), label_(std::move(label_node.label_)) { }
-  LabelNode(LabelNode const& other, std::string_view what) : Node(other, what), label_(other.label_) { }
-  LabelNode(LabelNode const& other) : Node(other), label_(other.label_) { }
+  LabelNode(LabelNode&& label_node) : Node(std::move(label_node.do_wrlock()), this->noLock), label_(std::move(label_node.label_))
+  {
+    do_wrunlock();
+  }
+  LabelNode(LabelNode&& label_node, std::string_view what);
+  LabelNode(LabelNode const& other) : Node(other.do_rdlock(), this->noLock), label_(other.label_)
+  {
+    do_rdunlock();
+  }
+  LabelNode(LabelNode const& other, std::string_view what);
 
   void set_label(std::string const& label)
   {

@@ -58,14 +58,11 @@ target_sources(cppgraphviz_ObjLib
     Array.h
     Graph.cxx
     Graph.h
-    GraphTracker.cxx
-    GraphTracker.h
     IndexedContainerSet.cxx
     IndexedContainerSet.h
     Item.cxx
     Item.h
-    ItemTracker.cxx
-    ItemTracker.h
+    LabelNode.cxx
     LabelNode.h
     MemoryRegion.h
     MemoryRegionOwner.cxx
@@ -74,8 +71,6 @@ target_sources(cppgraphviz_ObjLib
     MemoryRegionToOwnerLinker.h
     Node.cxx
     Node.h
-    NodeTracker.cxx
-    NodeTracker.h
     debug_ostream_operators.h
 )
 

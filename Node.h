@@ -1,8 +1,10 @@
 #pragma once
 
-#include "NodeTracker.h"
 #include "Item.h"
-#include "Graph.h"
+#include "dot/Node.h"
+#include "threadsafe/TrackedObject.h"
+#include "threadsafe/UnlockedTrackedObject.h"
+#include "threadsafe/ObjectTracker.h"
 #include "utils/has_print_on.h"
 #include <boost/intrusive_ptr.hpp>
 #ifdef CWDEBUG
@@ -12,86 +14,74 @@
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;
 
-template<typename T>
-class Class;
+class GraphTracker;
+class locked_Node;
 
-class Node : public ItemTemplate<NodeTracker>
+// Define an unlocked tracked Node, protected by a std::mutex.
+using Node = threadsafe::UnlockedTrackedObject<locked_Node, dot::ItemLockingPolicy>;
+
+// A Node has a std::shared_ptr<NodeTracker> (tracker_).
+// A NodeTracker has a Node* (node_) that points back to the Node.
+//
+// A Node also has a GraphPtr (graph_ptr_),
+// and the Graph has a std::weak_ptr<NodeTracker> (element of node_trackers_)
+// that points back to the NodeTracker that that Node points to.
+//
+//        --graph_ptr_ ------------------------------> Graph
+//   Node --tracker_-> NodeTracker <--node_trackers_--
+//        <---node_---
+//
+// The relationship between a Node and a NodeTracker is 1-on-1,
+// and the Node manages the NodeTracker. Therefore we can also
+// see the 'Node / NodeTracker' pair as a single "object".
+// This is why a NodeTracker automatically converts to a Node,
+// and we use the name 'node' for both (a variable of type
+// std::shared_ptr<NodeTracker> is still called a node_tracker
+// though).
+
+// Define a corresponding tracker class.
+class NodeTracker final : public threadsafe::ObjectTracker<Node, locked_Node, dot::ItemLockingPolicy>
+{
+ private:
+  dot::NodePtr node_ptr_;       // Unique pointer to the corresponding dot::NodeItem.
+
+ public:
+  NodeTracker(utils::Badge<threadsafe::TrackedObject<Node, NodeTracker>>, Node& node);
+
+  void set_what(std::string_view what)
+  {
+    dot::NodePtr::unlocked_type::wat node_item_w(node_ptr_.item());
+    node_item_w->attribute_list().remove("what");
+    node_item_w->attribute_list().add({"what", what});
+  }
+
+  dot::NodePtr const& node_ptr() const { return node_ptr_; }
+  dot::NodePtr& node_ptr() { return node_ptr_; }
+};
+
+class locked_Node : public ItemTemplate<Node, NodeTracker>
 {
  public:
-  // Create a new Node/NodeTracker pair for a class member.
-  // That means that Item should always find a parent graph tracker for this; if we don't then
-  // this is probably a temporary that will be moved or copied shortly after to the class member.
-  Node(std::string_view what) : ItemTemplate(this)
+  locked_Node(std::string_view what);
+  locked_Node(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what);
+  locked_Node(locked_Node&& node, std::string_view what);
+  locked_Node(locked_Node const& other, std::string_view what);
+  locked_Node(locked_Node const& other);
+
+  locked_Node(locked_Node&& node) : ItemTemplate<Node, NodeTracker>(std::move(node))
   {
-    DoutEntering(dc::notice, "Node(root_graph, \"" << what << "\") [" << this << "]");
-    tracker_->set_what(what);
-    auto pgt = parent_graph_tracker();
-    // A temporary can't be added yet.
-    if (pgt)
-      pgt->tracked_object().add_node(tracker_);
+    DoutEntering(dc::notice, "default locked_Node(locked_Node&& " << &node << ") [" << this << "]");
   }
 
-  // Create a new Node/NodeTracker pair.
-  Node(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) : ItemTemplate(root_graph, this)
-  {
-    DoutEntering(dc::notice, "Node(root_graph, \"" << what << "\") [" << this << "]");
-    tracker_->set_what(what);
-    get_parent_graph().add_node(tracker_);
-  }
-
-  // Move a Node, updating its NodeTracker.
-  Node(Node&& node, std::string_view what) : ItemTemplate<NodeTracker>(std::move(node))
-  {
-    DoutEntering(dc::notice, "Node(Node&& " << &node << ", \"" << what << "\") [" << this << "]");
-    tracker_->set_what(what);
-  }
-
-  Node(Node&& node) : ItemTemplate<NodeTracker>(std::move(node))
-  {
-    DoutEntering(dc::notice, "default Node(Node&& " << &node << ") [" << this << "]");
-  }
-
-  // Copy a Node, creating a new NodeTracker as well.
-  Node(Node const& other, std::string_view what) :
-    ItemTemplate(other.root_graph_tracker(), this)
-  {
-    DoutEntering(dc::notice, "Node(Node const& " << &other << ", \"" << what << "\") [" << this << "]");
-    tracker_->set_what(what);
-    std::shared_ptr<GraphTracker> graph_tracker = parent_graph_tracker();
-    // Node's that are added to a TableNode are not added to a Graph.
-    if (graph_tracker)
-      graph_tracker->tracked_object().add_node(tracker_);
-  }
-
-  Node(Node const& other) : ItemTemplate(other.root_graph_tracker(), this)
-  {
-    DoutEntering(dc::notice, "default Node(Node const& " << &other << ") [" << this << "]");
-    {
-      dot::NodePtr::unlocked_type::crat node_item_r{other.tracker_->node_ptr().item()};
-      std::string_view what = node_item_r->attribute_list().get_value("what");
-      tracker_->set_what(what);
-    }
-    get_parent_graph().add_node(tracker_);
-  }
-
-  ~Node()
-  {
-    DoutEntering(dc::notice, "~Node() [" << this << "]");
-
-    // If Node was moved then tracker_ (and parent_graph_tracker_) will be null.
-    std::shared_ptr<GraphTracker> parent_graph_tracker = parent_graph_tracker_.lock();
-    if (parent_graph_tracker && tracker_)
-      parent_graph_tracker->tracked_object().remove_node(std::move(tracker_));
-  }
+  ~locked_Node();
 
   operator std::weak_ptr<NodeTracker>() const { return tracker_; }
-  operator dot::NodePtr&() const { return tracker_->node_ptr(); }
-
-  void initialize() override
+  operator dot::NodePtr&() const
   {
-    // Add the attributes of this Node.
-    item_attributes(dot::NodePtr::unlocked_type::wat{tracker_->node_ptr().item()}->attribute_list());
+    return tracker_->node_ptr();
   }
+
+  void initialize() override;
 
 #ifdef CWDEBUG
   void print_on(std::ostream& os) const;

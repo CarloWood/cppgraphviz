@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dot/Node.h"
 #include "MemoryRegion.h"
+#include "dot/Node.h"
 #include "utils/ObjectTracker.h"
 #ifdef CWDEBUG
 #include "utils/has_print_on.h"

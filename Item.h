@@ -1,18 +1,21 @@
 #pragma once
 
-#include "dot/AttributeList.h"
 #include "MemoryRegionToOwnerLinker.h"
+#include "dot/AttributeList.h"
+#include "dot/Graph.h"
 #include "utils/Badge.h"
 #include "utils/AIRefCount.h"
+#include "threadsafe/TrackedObject.h"
 #ifdef CWDEBUG
 #include "debug_ostream_operators.h"
 #endif
 
 namespace cppgraphviz {
 
-class Graph;
+class locked_Graph;
 class MemoryRegionOwner;
 class NodeTracker;
+class GraphTracker;
 
 class Item
 {
@@ -32,7 +35,7 @@ class Item
 
   // The two constructors below call inform_owner_of which calls this function,
   // to finish initialization, if the memory region owner of object could be found.
-  // It is also called by ItemTracker and Graph.
+  // It is also called by Class and Graph.
   void set_parent_graph_tracker(std::weak_ptr<GraphTracker> parent_graph_tracker);
 
  public:
@@ -81,21 +84,23 @@ class Item
     return parent_graph_tracker_.lock();
   }
 
-  Graph& get_parent_graph()
+#if 0
+  GraphTracker::wat get_parent_graph();
   {
     std::shared_ptr<GraphTracker> parent_graph_tracker = parent_graph_tracker_.lock();
     // Don't call get_parent_graph if this Item doesn't have one.
     ASSERT(parent_graph_tracker);
-    return *parent_graph_tracker;
+    return parent_graph_tracker->tracked_wat();
   }
 
-  Graph const& get_parent_graph() const
+  GraphTracker::rat get_parent_graph() const
   {
     std::shared_ptr<GraphTracker const> parent_graph_tracker = parent_graph_tracker_.lock();
     // Don't call get_parent_graph if this Item doesn't have one.
     ASSERT(parent_graph_tracker);
-    return *parent_graph_tracker;
+    return parent_graph_tracker->tracked_rat();
   }
+#endif
 
 #if 0 //FIXME: remove - this is not thread-safe.
   bool has_parent_graph() const
@@ -112,12 +117,12 @@ class Item
   virtual void item_attributes(dot::AttributeList& list) { }
 };
 
-template<typename Tracker>
-class ItemTemplate : public utils::TrackedObject<Tracker>, public Item
+template<typename TrackedType, typename Tracker>
+class ItemTemplate : public threadsafe::TrackedObject<TrackedType, Tracker>, public Item
 {
  public:
-  // This is used by Graph when it is the root graph.
-  ItemTemplate(utils::Badge<Graph>) : Item(this->tracker_) { }
+  // This is used by locked_Graph when it is the root graph.
+  ItemTemplate(utils::Badge<locked_Graph>) : Item(this->tracker_) { }
 
   // This is used by Node that is a member of a class.
   ItemTemplate(Item* object) : Item(object) { }
@@ -131,18 +136,21 @@ class ItemTemplate : public utils::TrackedObject<Tracker>, public Item
   ItemTemplate(std::weak_ptr<GraphTracker> const& root_graph_tracker, Item* object) :
     Item(root_graph_tracker, object, &this->tracker().node_ptr()) { }
 
-  ItemTemplate(ItemTemplate&& orig) : utils::TrackedObject<Tracker>(std::move(orig)), Item(std::move(orig)) { }
+  ItemTemplate(ItemTemplate&& orig) : threadsafe::TrackedObject<TrackedType, Tracker>(std::move(orig)), Item(std::move(orig)) { }
 
   // Return the value of the "what" attribute.
-  std::string get_what() const
-  {
-    std::string what;
-    if constexpr (std::is_same_v<Tracker, NodeTracker>)
-      what = std::string(dot::NodePtr::unlocked_type::crat{this->tracker_->node_ptr().item()}->attribute_list().get_value("what"));
-    else
-      what = std::string(dot::GraphPtr::unlocked_type::crat{this->tracker_->graph_ptr().item()}->attribute_list().get_value("what"));
-    return what;
-  }
+  std::string get_what() const;
 };
+
+template<typename TrackedType, typename Tracker>
+std::string ItemTemplate<TrackedType, Tracker>::get_what() const
+{
+  std::string what;
+  if constexpr (std::is_same_v<Tracker, NodeTracker>)
+    what = std::string(dot::NodePtr::unlocked_type::crat{this->tracker_->node_ptr().item()}->attribute_list().get_value("what"));
+  else
+    what = std::string(dot::GraphPtr::unlocked_type::crat{this->tracker_->graph_ptr().item()}->attribute_list().get_value("what"));
+  return what;
+}
 
 } // namespace cppgraphviz

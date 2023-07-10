@@ -1,8 +1,7 @@
 #pragma once
 
-#include "dot/Node.h"
 #include "MemoryRegionOwner.h"
-#include "GraphTracker.h"
+#include "dot/Node.h"
 #include "utils/Singleton.h"
 #include "threadsafe/threadsafe.h"
 

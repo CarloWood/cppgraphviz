@@ -12,14 +12,14 @@ class Class : public Graph
 
  public:
   Class(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) :
-    Graph({reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, root_graph, what)
+    Graph(MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, root_graph, what)
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(" <<
         root_graph << ", \"" << what << "\") [" << this << "]");
   }
 
   Class(Class const& other, std::string_view what) :
-    Graph({reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, other, what),
+    Graph(MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, other, what),
     label_(other.label_)
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(Class const& " <<

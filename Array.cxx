@@ -1,6 +1,7 @@
 #include "sys.h"
 #include "Array.h"
 #include "Node.h"
+#include "Graph.h"
 
 namespace cppgraphviz {
 
@@ -41,7 +42,7 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
   }
   indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
-  root_graph_tracker->tracked_object().add_array(MemoryRegionOwner::tracker_);
+  root_graph_tracker->tracked_wat()->add_array(MemoryRegionOwner::tracker_);
 }
 
 ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(char* begin, size_t element_size, size_t number_of_elements,
@@ -87,7 +88,7 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& oth
   IndexedContainerSet& indexed_container_set = iter->second;
   indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
-  root_graph->tracked_object().add_array(MemoryRegionOwner::tracker_);
+  root_graph->tracked_wat()->add_array(MemoryRegionOwner::tracker_);
 }
 
 ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& orig, char* begin, std::string_view what) :
@@ -130,7 +131,7 @@ void ArrayMemoryRegionOwner::call_initialize_on_elements()
     auto node_tracker = id_to_node_map_[index].lock();
     ++index;
     if (node_tracker)
-      node_tracker->tracked_object().initialize();
+      node_tracker->tracked_wat()->initialize();
   });
 }
 
