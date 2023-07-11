@@ -2,8 +2,6 @@
 
 #include "Item.h"
 #include "dot/Node.h"
-#include "threadsafe/TrackedObject.h"
-#include "threadsafe/UnlockedTrackedObject.h"
 #include "threadsafe/ObjectTracker.h"
 #include "utils/has_print_on.h"
 #include <boost/intrusive_ptr.hpp>

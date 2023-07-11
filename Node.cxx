@@ -1,7 +1,7 @@
 #include "sys.h"
 #include "Node.h"
 #include "Graph.h"
-#include "threadsafe/TrackedObject.inl.h"
+#include "threadsafe/ObjectTracker.inl.h"
 
 namespace cppgraphviz {
 
@@ -25,9 +25,7 @@ locked_Node::locked_Node(std::weak_ptr<GraphTracker> const& root_graph, std::str
 {
   DoutEntering(dc::notice, "locked_Node(root_graph, \"" << what << "\") [" << this << "]");
   tracker_->set_what(what);
-  auto parent_graph_w = parent_graph_tracker()->tracked_wat();
-  locked_Graph& parent_graph = *parent_graph_w;
-  parent_graph.add_node(tracker_);
+  parent_graph_wat()->add_node(tracker_);
 }
 
 // Move a Node, updating its NodeTracker.
@@ -57,7 +55,7 @@ locked_Node::locked_Node(locked_Node const& other) : ItemTemplate(other.root_gra
     std::string_view what = node_item_r->attribute_list().get_value("what");
     tracker_->set_what(what);
   }
-  parent_graph_tracker()->tracked_wat()->add_node(tracker_);
+  parent_graph_wat()->add_node(tracker_);
 }
 
 locked_Node::~locked_Node()

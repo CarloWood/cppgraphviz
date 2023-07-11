@@ -2,7 +2,7 @@
 #include "Graph.h"
 #include "Node.h"
 #include "Array.h"
-#include "threadsafe/TrackedObject.inl.h"
+#include "threadsafe/ObjectTracker.inl.h"
 
 namespace cppgraphviz {
 
@@ -24,7 +24,7 @@ locked_Graph::locked_Graph(std::weak_ptr<GraphTracker> const& root_graph, std::s
 {
   DoutEntering(dc::notice, "locked_Graph(" << root_graph << ", \"" << what << "\") [" << this << "]");
   tracker_->set_what(what);
-  parent_graph_tracker()->tracked_wat()->add_graph(tracker_);
+  parent_graph_wat()->add_graph(tracker_);
 }
 
 // Create a new Graph/GraphTracker pair. This is a subgraph.
@@ -33,7 +33,7 @@ locked_Graph::locked_Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracke
 {
   DoutEntering(dc::notice, "locked_Graph(" << memory_region << ", " << root_graph << ", \"" << what << "\") [" << this << "]");
   tracker_->set_what(what);
-  parent_graph_tracker()->tracked_wat()->add_graph(tracker_);
+  parent_graph_wat()->add_graph(tracker_);
 }
 
 // Move a Graph, updating its GraphTracker.
@@ -58,7 +58,7 @@ locked_Graph::locked_Graph(MemoryRegion memory_region, locked_Graph const& other
 {
   DoutEntering(dc::notice, "locked_Graph(" << memory_region << ", locked_Graph const& " << &other << ", \"" << what << "\") [" << this << "]");
   tracker_->set_what(what);
-  parent_graph_tracker()->tracked_wat()->add_graph(tracker_);
+  parent_graph_wat()->add_graph(tracker_);
 }
 
 locked_Graph::~locked_Graph()

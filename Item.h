@@ -5,10 +5,7 @@
 #include "dot/Graph.h"
 #include "utils/Badge.h"
 #include "utils/AIRefCount.h"
-#include "threadsafe/TrackedObject.h"
-#ifdef CWDEBUG
-#include "debug_ostream_operators.h"
-#endif
+#include "threadsafe/ObjectTracker.h"
 
 namespace cppgraphviz {
 
@@ -16,6 +13,8 @@ class locked_Graph;
 class MemoryRegionOwner;
 class NodeTracker;
 class GraphTracker;
+class Graph;
+class locked_Graph;
 
 class Item
 {
@@ -84,30 +83,8 @@ class Item
     return parent_graph_tracker_.lock();
   }
 
-#if 0
-  GraphTracker::wat get_parent_graph();
-  {
-    std::shared_ptr<GraphTracker> parent_graph_tracker = parent_graph_tracker_.lock();
-    // Don't call get_parent_graph if this Item doesn't have one.
-    ASSERT(parent_graph_tracker);
-    return parent_graph_tracker->tracked_wat();
-  }
-
-  GraphTracker::rat get_parent_graph() const
-  {
-    std::shared_ptr<GraphTracker const> parent_graph_tracker = parent_graph_tracker_.lock();
-    // Don't call get_parent_graph if this Item doesn't have one.
-    ASSERT(parent_graph_tracker);
-    return parent_graph_tracker->tracked_rat();
-  }
-#endif
-
-#if 0 //FIXME: remove - this is not thread-safe.
-  bool has_parent_graph() const
-  {
-    return parent_graph_tracker_.use_count() > 0;
-  }
-#endif
+  threadsafe::ObjectTracker<Graph, locked_Graph, dot::ItemLockingPolicy>::wat parent_graph_wat();
+  threadsafe::ObjectTracker<Graph, locked_Graph, dot::ItemLockingPolicy>::rat parent_graph_rat();
 
   std::weak_ptr<GraphTracker> const& root_graph_tracker() const { return root_graph_tracker_; }
 

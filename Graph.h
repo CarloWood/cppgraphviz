@@ -3,8 +3,6 @@
 #include "MemoryRegionOwner.h"
 #include "Item.h"
 #include "dot/Graph.h"
-#include "threadsafe/TrackedObject.h"
-#include "threadsafe/UnlockedTrackedObject.h"
 #include "threadsafe/ObjectTracker.h"
 #include <vector>
 #include <memory>
@@ -24,9 +22,7 @@ class Class;
 class GraphTracker;
 class NodeTracker;
 class locked_Graph;
-
-// Define an unlocked tracked Graph, protected by a std::mutex.
-using Graph = threadsafe::UnlockedTrackedObject<locked_Graph, dot::ItemLockingPolicy>;
+class Graph;
 
 // GraphTracker objects can only be created by calling the static GraphTracker::create,
 // which uses std::make_shared<GraphTracker> to create it.
@@ -121,6 +117,13 @@ class locked_Graph : public ItemTemplate<Graph, GraphTracker>, public MemoryRegi
  public:
   void print_on(std::ostream& os) const override;
 #endif
+};
+
+// Define an unlocked tracked Graph, protected by a std::mutex.
+class Graph : public threadsafe::UnlockedTrackedObject<locked_Graph, dot::ItemLockingPolicy>
+{
+ public:
+  using threadsafe::UnlockedTrackedObject<locked_Graph, dot::ItemLockingPolicy>::UnlockedTrackedObject;
 };
 
 } // namespace cppgraphviz
