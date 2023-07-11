@@ -124,6 +124,12 @@ class Graph : public threadsafe::UnlockedTrackedObject<locked_Graph, dot::ItemLo
 {
  public:
   using threadsafe::UnlockedTrackedObject<locked_Graph, dot::ItemLockingPolicy>::UnlockedTrackedObject;
+
+  void write_dot(std::ostream& os) const
+  {
+    crat graph_r(*this);
+    graph_r->write_dot(os);
+  }
 };
 
 } // namespace cppgraphviz
