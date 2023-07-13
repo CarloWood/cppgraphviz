@@ -55,7 +55,15 @@ locked_Node::locked_Node(locked_Node const& other) : ItemTemplate(other.root_gra
     std::string_view what = node_item_r->attribute_list().get_value("what");
     tracker_->set_what(what);
   }
-  parent_graph_wat()->add_node(tracker_);
+  // Add the node to a parent graph, if any.
+  // This is the case for array elements; they are not added to any Graph directly but instead linked
+  // to from their corresponding TableElement.
+  std::shared_ptr<GraphTracker> parent_graph_tracker = this->parent_graph_tracker();
+  if (parent_graph_tracker)
+  {
+    auto parent_graph_w = parent_graph_tracker->tracked_wat();
+    parent_graph_w->add_node(tracker_);
+  }
 }
 
 locked_Node::~locked_Node()

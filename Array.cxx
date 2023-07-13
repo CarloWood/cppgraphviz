@@ -119,6 +119,9 @@ void ArrayMemoryRegionOwner::on_memory_region_usage(MemoryRegion const& item_mem
   std::weak_ptr<NodeTracker> weak_node_tracker = *node;
   Dout(dc::notice, "Mapping id_to_node_map_[" << index << "] = " << weak_node_tracker);
   id_to_node_map_[index] = weak_node_tracker;
+
+  // Array elements should be created without root graph. They get that when they are copied into the array, here.
+  item->set_root_graph_tracker(root_graph_tracker_);
 }
 
 void ArrayMemoryRegionOwner::call_initialize_on_elements()

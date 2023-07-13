@@ -32,6 +32,9 @@ class Item
   // This is used by Graph when it is the root graph.
   Item(std::weak_ptr<GraphTracker> root_graph_tracker) : root_graph_tracker_(std::move(root_graph_tracker)), parent_graph_tracker_{} { }
 
+  // Called for Array elements, that have the root graph set when being added to the memory region of an array for the first time.
+  void set_root_graph_tracker(std::weak_ptr<GraphTracker> root_graph_tracker);
+
   // The two constructors below call inform_owner_of which calls this function,
   // to finish initialization, if the memory region owner of object could be found.
   // It is also called by Class and Graph.

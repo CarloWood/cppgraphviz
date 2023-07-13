@@ -86,7 +86,7 @@ void MemoryRegionToOwnerLinker::inform_owner_of(Item* item, dot::NodePtr* node_p
 
   // This can happen for example when creating a temporary in the constructor of a class;
   // we just don't add those to any graph at all until they are moved (or copied) into
-  // a memory region that belongs to a managed Class.
+  // a memory region that belongs to a managed Class or Array.
   if (iter == memory_region_to_owner_map_.end())
     return;
 

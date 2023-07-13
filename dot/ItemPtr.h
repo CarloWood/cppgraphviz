@@ -76,9 +76,6 @@ struct ItemPtrTemplate : ItemPtr
   // Accessors.
   unlocked_type const& item() const { return unlocked_cast<unlocked_type const&>(this->shared_item_ptr_); }
   unlocked_type& item() { return unlocked_cast<unlocked_type&>(this->shared_item_ptr_); }
-
-//  unlocked_type const* operator->() const { return static_cast<T const*>(this->shared_item_ptr_.get()); }
-//  unlocked_type* operator->() { return static_cast<T*>(this->shared_item_ptr_.get()); }
 };
 
 template<typename T>
@@ -95,8 +92,6 @@ struct ConstItemPtrTemplate : ConstItemPtr
 
   // Accessor.
   unlocked_type const& item() const { return unlocked_cast<unlocked_type const&>(shared_item_ptr_); }
-
-//  T const* operator->() const { return static_cast<T const*>(this->shared_item_ptr_.get()); }
 };
 
 } // namespace cppgraphviz::dot

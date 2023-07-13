@@ -5,6 +5,13 @@
 
 namespace cppgraphviz {
 
+void Item::set_root_graph_tracker(std::weak_ptr<GraphTracker> root_graph_tracker)
+{
+  // Only set the root graph once.
+  ASSERT(root_graph_tracker_.use_count() == 0);
+  root_graph_tracker_ = std::move(root_graph_tracker);
+}
+
 void Item::set_parent_graph_tracker(std::weak_ptr<GraphTracker> parent_graph_tracker)
 {
   parent_graph_tracker_ = std::move(parent_graph_tracker);

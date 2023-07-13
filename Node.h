@@ -73,7 +73,6 @@ class locked_Node : public ItemTemplate<Node, NodeTracker>
 
   ~locked_Node();
 
-  operator std::weak_ptr<NodeTracker>() const { return tracker_; }
   operator dot::NodePtr&() const
   {
     return tracker_->node_ptr();
