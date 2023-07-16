@@ -57,14 +57,14 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(char* begin, size_t element_size,
   ASSERT(false);
 }
 
-ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& other,
+ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(threadsafe::LockFinalCopy<ArrayMemoryRegionOwner> other,
     char* begin, std::type_info const& index_type_info, std::string_view what) :
-  MemoryRegionOwner({ begin, other.element_size_ * other.number_of_elements_ }),
+  MemoryRegionOwner({ begin, other->element_size_ * other->number_of_elements_ }),
   LabelNode(other, what),
-  begin_(begin), element_size_(other.element_size_), number_of_elements_(other.number_of_elements_),
+  begin_(begin), element_size_(other->element_size_), number_of_elements_(other->number_of_elements_),
   id_to_node_map_(number_of_elements_)
 {
-  DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& " << &other << ", " <<
+  DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& " << other.operator->() << ", " <<
       (void*)begin << ", index_type_info, \"" << what << "\")");
 
   {
@@ -91,13 +91,14 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& oth
   root_graph->tracked_wat()->add_array(MemoryRegionOwner::tracker_);
 }
 
-ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& orig, char* begin, std::string_view what) :
-  MemoryRegionOwner(std::move(orig), { begin, orig.element_size_ * orig.number_of_elements_ }),
+ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(threadsafe::LockFinalMove<ArrayMemoryRegionOwner> orig, char* begin, std::string_view what) :
+  MemoryRegionOwner(*orig, { begin, orig->element_size_ * orig->number_of_elements_ }),
   LabelNode(std::move(orig), what),
-  begin_(begin), element_size_(orig.element_size_), number_of_elements_(orig.number_of_elements_),
-  table_node_ptr_(std::move(orig.table_node_ptr_)), id_to_node_map_(std::move(orig.id_to_node_map_))
+  begin_(begin), element_size_(orig->element_size_), number_of_elements_(orig->number_of_elements_),
+  table_node_ptr_(std::move(orig->table_node_ptr_)), id_to_node_map_(std::move(orig->id_to_node_map_))
 {
-  DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& " << &orig << ", " << (void*)begin);
+  DoutEntering(dc::notice,
+      "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& " << orig.operator->() << ", " << (void*)begin);
 }
 
 void ArrayMemoryRegionOwner::on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr)

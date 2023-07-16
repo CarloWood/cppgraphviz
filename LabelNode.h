@@ -20,18 +20,26 @@ class LabelNode : public Node
   }
 
  public:
+  // Default constructor with a what argument.
   LabelNode(std::string_view what) : Node(what) { }
+  // Also specify the root graph.
   LabelNode(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) : Node(root_graph, what) { }
-  LabelNode(LabelNode&& label_node) : Node(std::move(label_node.do_wrlock()), this->noLock), label_(std::move(label_node.label_))
-  {
-    do_wrunlock();
-  }
-  LabelNode(LabelNode&& label_node, std::string_view what);
-  LabelNode(LabelNode const& other) : Node(other.do_rdlock(), this->noLock), label_(other.label_)
-  {
-    do_rdunlock();
-  }
-  LabelNode(LabelNode const& other, std::string_view what);
+
+  // Move constructors.
+  LabelNode(threadsafe::LockFinalMove<LabelNode> other) : Node(std::move(other)), label_(std::move(other->label_)) { }
+  LabelNode(LabelNode&& other) : LabelNode(threadsafe::LockFinalMove<LabelNode>{std::move(other)}) { }
+
+  // Move constructors with what argument.
+  LabelNode(threadsafe::LockFinalMove<LabelNode> other, std::string_view what);
+  LabelNode(LabelNode&& other, std::string_view what) : LabelNode(threadsafe::LockFinalMove<LabelNode>{std::move(other)}, what) { }
+
+  // Copy constructors.
+  LabelNode(threadsafe::LockFinalCopy<LabelNode> other) : Node(other), label_(other->label_) { }
+  LabelNode(LabelNode const& other) : LabelNode(threadsafe::LockFinalCopy<LabelNode>{other}) { }
+
+  // Copy constructors with what argument.
+  LabelNode(threadsafe::LockFinalCopy<LabelNode> other, std::string_view what);
+  LabelNode(LabelNode const& other, std::string_view what) : LabelNode(threadsafe::LockFinalCopy<LabelNode>{other}, what) { }
 
   void set_label(std::string const& label)
   {

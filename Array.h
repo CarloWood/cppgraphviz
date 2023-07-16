@@ -35,10 +35,10 @@ class ArrayMemoryRegionOwner : public MemoryRegionOwner, public LabelNode
   ArrayMemoryRegionOwner(char* begin, size_t element_size, size_t number_of_elements,
       std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what);
 
-  ArrayMemoryRegionOwner(ArrayMemoryRegionOwner const& other,
+  ArrayMemoryRegionOwner(threadsafe::LockFinalCopy<ArrayMemoryRegionOwner> other,
       char* begin, std::type_info const& index_type_info, std::string_view what);
 
-  ArrayMemoryRegionOwner(ArrayMemoryRegionOwner&& other, char* begin, std::string_view what);
+  ArrayMemoryRegionOwner(threadsafe::LockFinalMove<ArrayMemoryRegionOwner> other, char* begin, std::string_view what);
 
   void call_initialize_on_elements();
 

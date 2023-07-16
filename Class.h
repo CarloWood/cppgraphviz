@@ -11,27 +11,37 @@ class Class : public Graph
   std::string label_;
 
  public:
-  Class(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) :
-    Graph(MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, root_graph, what)
+  template<typename WP>
+  requires (std::is_convertible_v<WP, std::weak_ptr<GraphTracker> const&> &&
+            !std::is_constructible_v<threadsafe::LockFinalCopy<Class>, WP> &&
+            !std::is_constructible_v<threadsafe::LockFinalMove<Class>, WP>)
+  Class(WP const& root_graph, std::string_view what) :
+    Graph(MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)},
+        static_cast<std::weak_ptr<GraphTracker> const&>(root_graph), what)
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(" <<
-        root_graph << ", \"" << what << "\") [" << this << "]");
+        static_cast<std::weak_ptr<GraphTracker> const&>(root_graph) << ", \"" << what << "\") [" << this << "]");
   }
 
-  Class(Class const& other, std::string_view what) :
-    Graph(MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, other, what),
-    label_(other.label_)
+  Class(threadsafe::LockFinalCopy<Class> other, std::string_view what) :
+    Graph(MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, *other, what),
+    label_(other->label_)
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(Class const& " <<
         &other << ", \"" << what << "\") [" << this << "]");
   }
+  Class(Class const& other, std::string_view what) : Class(threadsafe::LockFinalCopy<Class>{other}, what) { }
 
-  Class(Class&& other, std::string_view what) : Graph(std::move(other), what), label_(std::move(other.label_))
+  Class(threadsafe::LockFinalMove<Class> other, std::string_view what) :
+    Graph(std::move(other), what),
+    label_(std::move(other->label_))
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(Class&& " <<
         &other << ", \"" << what << "\") [" << this << "]");
   }
+  Class(Class&& other, std::string_view what) : Class(threadsafe::LockFinalMove<Class>{std::move(other)}, what) { }
 
+ public:
   void set_label(std::string const& label)
   {
     label_ = label;
