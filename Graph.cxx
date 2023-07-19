@@ -37,15 +37,25 @@ locked_Graph::locked_Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracke
 }
 
 // Move a Graph, updating its GraphTracker.
-// The new instance is not associated with a new MemoryRegion because ... FIXME
 locked_Graph::locked_Graph(locked_Graph&& orig, std::string_view what) :
   ItemTemplate<Graph, GraphTracker>(std::move(orig)),
-  MemoryRegionOwner(std::move(orig), {}),
   node_trackers_(std::move(orig.node_trackers_)),
   graph_trackers_(std::move(orig.graph_trackers_)),
   array_trackers_(std::move(orig.array_trackers_))
 {
   DoutEntering(dc::notice, "locked_Graph(locked_Graph&& " << &orig << ", \"" << what << "\") [" << this << "]");
+  tracker_->set_what(what);
+}
+
+// Move a Graph, updating its GraphTracker.
+locked_Graph::locked_Graph(locked_Graph&& orig, MemoryRegion const& memory_region, std::string_view what) :
+  ItemTemplate<Graph, GraphTracker>(std::move(orig)),
+  MemoryRegionOwner(std::move(orig), memory_region),
+  node_trackers_(std::move(orig.node_trackers_)),
+  graph_trackers_(std::move(orig.graph_trackers_)),
+  array_trackers_(std::move(orig.array_trackers_))
+{
+  DoutEntering(dc::notice, "locked_Graph(locked_Graph&& " << &orig << ", " << memory_region << ", \"" << what << "\") [" << this << "]");
   tracker_->set_what(what);
 }
 

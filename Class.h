@@ -33,7 +33,7 @@ class Class : public Graph
   Class(Class const& other, std::string_view what) : Class(threadsafe::LockFinalCopy<Class>{other}, what) { }
 
   Class(threadsafe::LockFinalMove<Class> other, std::string_view what) :
-    Graph(std::move(other), what),
+    Graph(std::move(other), MemoryRegion{reinterpret_cast<char*>(static_cast<T*>(this)), sizeof(T)}, what),
     label_(std::move(other->label_))
   {
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(Class&& " <<

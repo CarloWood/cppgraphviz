@@ -77,8 +77,9 @@ class locked_Graph : public ItemTemplate<Graph, GraphTracker>, public MemoryRegi
   // the header.
   locked_Graph(std::string_view what);
   locked_Graph(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what);
-  locked_Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracker> const& root_graph, std::string_view what);
   locked_Graph(locked_Graph&& orig, std::string_view what);
+  locked_Graph(MemoryRegion memory_region, std::weak_ptr<GraphTracker> const& root_graph, std::string_view what);
+  locked_Graph(locked_Graph&& orig, MemoryRegion const& memory_region, std::string_view what);
 
   // Copying a Graph is not allowed.
   locked_Graph(locked_Graph const& other) = delete;
