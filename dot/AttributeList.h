@@ -9,7 +9,7 @@ namespace cppgraphviz::dot {
 class AttributeList
 {
  private:
-  std::set<Attribute> attributes_;                      // FIXME: threadsafe
+  std::set<Attribute> attributes_;      // AttributeList itself should be locked before accessed, so this std::set is threadsafe too.
 
  public:
   void add(Attribute&& attribute)

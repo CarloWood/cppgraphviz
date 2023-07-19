@@ -48,12 +48,12 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
 ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(char* begin, size_t element_size, size_t number_of_elements,
     std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what) :
   MemoryRegionOwner({ begin, element_size * number_of_elements }),
-  //FIXME: root graph?
   LabelNode(what)
 {
   DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(" <<
       (void*)begin << ", " << element_size << ", " << number_of_elements << ", index_type_info, " <<
       demangled_index_type_name << ", \"" << what << "\")");
+  // Not implemented; among others we'll have to get the root graph from the memory region owner that we're in now(?)
   ASSERT(false);
 }
 
