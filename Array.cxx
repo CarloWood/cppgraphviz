@@ -33,14 +33,17 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
   // Create a key that is unique for a _Index / root_graph pair.
   uint64_t key = utils::pointer_hash_combine(index_type_info.hash_code(), root_graph_tracker.get());
 
-  auto ibp = index_container_sets_.try_emplace(key, "ArrayMemoryRegionOwner::index_container_sets_");
-  IndexedContainerSet& indexed_container_set = ibp.first->second;
-  if (ibp.second)
   {
-    dot::GraphPtr::unlocked_type::wat{root_graph_tracker->graph_ptr().item()}->insert(indexed_container_set);
-    ibp.first->second.set_label(std::string("Array[") + demangled_index_type_name + "]");
+    index_container_sets_t::wat index_container_sets_w{index_container_sets_};
+    auto ibp = index_container_sets_w->try_emplace(key, "ArrayMemoryRegionOwner::index_container_sets_");
+    IndexedContainerSet& indexed_container_set = ibp.first->second;
+    if (ibp.second)
+    {
+      dot::GraphPtr::unlocked_type::wat{root_graph_tracker->graph_ptr().item()}->insert(indexed_container_set);
+      ibp.first->second.set_label(std::string("Array[") + demangled_index_type_name + "]");
+    }
+    indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
   }
-  indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
   root_graph_tracker->tracked_wat()->add_array(MemoryRegionOwner::tracker_);
 }
@@ -48,7 +51,8 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const
 ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(char* begin, size_t element_size, size_t number_of_elements,
     std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what) :
   MemoryRegionOwner({ begin, element_size * number_of_elements }),
-  LabelNode(what)
+  LabelNode(what),
+  begin_(begin), element_size_(element_size), number_of_elements_(number_of_elements)
 {
   DoutEntering(dc::notice, "ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(" <<
       (void*)begin << ", " << element_size << ", " << number_of_elements << ", index_type_info, " <<
@@ -83,10 +87,13 @@ ArrayMemoryRegionOwner::ArrayMemoryRegionOwner(threadsafe::LockFinalCopy<ArrayMe
   ASSERT(root_graph);
   // Create a key that is unique for a _Index / root_graph pair.
   uint64_t key = utils::pointer_hash_combine(index_type_info.hash_code(), root_graph.get());
-  auto iter = index_container_sets_.find(key);
-  ASSERT(iter != index_container_sets_.end());
-  IndexedContainerSet& indexed_container_set = iter->second;
-  indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
+  {
+    index_container_sets_t::wat index_container_sets_w{index_container_sets_};
+    auto iter = index_container_sets_w->find(key);
+    ASSERT(iter != index_container_sets_w->end());
+    IndexedContainerSet& indexed_container_set = iter->second;
+    indexed_container_set.add_container(table_node_ptr_, dot::TableNodePtr::unlocked_type::crat{table_node_ptr_.item()});
+  }
   // Add this array to the root graph, so that it will call initialize before writing the dot file.
   root_graph->tracked_wat()->add_array(MemoryRegionOwner::tracker_);
 }
@@ -140,6 +147,6 @@ void ArrayMemoryRegionOwner::call_initialize_on_elements()
 }
 
 //static
-std::map<uint64_t, IndexedContainerSet> ArrayMemoryRegionOwner::index_container_sets_;
+ArrayMemoryRegionOwner::index_container_sets_t ArrayMemoryRegionOwner::index_container_sets_;
 
 } // namespace cppgraphviz

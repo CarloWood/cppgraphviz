@@ -8,6 +8,7 @@
 #include "utils/Array.h"
 #include "utils/has_print_on.h"
 #include "utils/pointer_hash.h"
+#include "threadsafe/threadsafe.h"
 #include <map>
 #include "debug.h"
 
@@ -21,12 +22,14 @@ using utils::has_print_on::operator<<;
 class ArrayMemoryRegionOwner : public MemoryRegionOwner, public LabelNode
 {
  private:
-  char* begin_;                         // Pointer to the first element.
-  size_t element_size_;                 // Element stride.
-  size_t number_of_elements_;           // The size() of the array.
+  char* const begin_;                   // Pointer to the first element.
+  size_t const element_size_;           // Element stride.
+  size_t const number_of_elements_;     // The size() of the array.
   dot::TableNodePtr table_node_ptr_;
   std::vector<std::weak_ptr<NodeTracker>> id_to_node_map_; // A map of array index to the tracker of the associated Node.
-  static std::map<uint64_t, IndexedContainerSet> index_container_sets_;
+  using index_container_sets_container_type = std::map<uint64_t, IndexedContainerSet>;
+  using index_container_sets_t = threadsafe::Unlocked<index_container_sets_container_type, threadsafe::policy::Primitive<std::mutex>>;
+  static index_container_sets_t index_container_sets_;
 
  public:
   ArrayMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph, char* begin, size_t element_size, size_t number_of_elements,
