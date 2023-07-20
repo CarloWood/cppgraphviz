@@ -1,8 +1,11 @@
 #pragma once
 
+#include "utils/Badge.h"
 #include <iostream>
 
 namespace cppgraphviz {
+
+class MemoryRegionOwner;
 
 class MemoryRegion
 {
@@ -13,6 +16,18 @@ class MemoryRegion
  public:
   constexpr MemoryRegion() : begin_(nullptr), end_(nullptr) { }
   constexpr MemoryRegion(char* begin, size_t size) : begin_(begin), end_(begin + size) { }
+
+  // Disallow assignment because that wouldn't be thread-safe without demanding
+  // external synchronization of all MemoryRegion objects. This way we know we don't need that.
+  MemoryRegion& operator=(MemoryRegion const&) = delete;
+
+  // However, when a MemoryRegionOwner is moved, its registered_memory_region_ is reset.
+  // This is ok because being moved implies external synchronization.
+  void reset(utils::Badge<MemoryRegionOwner>)
+  {
+    begin_ = nullptr;
+    end_ = nullptr;
+  }
 
   bool operator==(MemoryRegion const& other) const
   {

@@ -80,14 +80,6 @@ class IndexedContainerSet
     inner_subgraph_w->add(container);
   }
 
-#if 0
-  void add_container(dot::TableNodePtr&& container)
-  {
-    dot::GraphPtr::unlocked_type::wat inner_subgraph_w{inner_subgraph_.item()};
-    inner_subgraph_w->add(std::move(container));
-  }
-#endif
-
   void add_to_graph(dot::GraphItem& graph_item);
   void remove_from_graph(dot::GraphItem& graph_item);
 

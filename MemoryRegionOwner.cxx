@@ -22,7 +22,7 @@ MemoryRegionOwner::MemoryRegionOwner(MemoryRegionOwner&& orig, MemoryRegion memo
   memory_region_to_owner_linker_type::wat memory_region_to_owner_linker_w(MemoryRegionToOwnerLinkerSingleton::instance().linker_);
   memory_region_to_owner_linker_w->unregister_memory_region(orig.registered_memory_region_);
   // Stop the destructor from unregistering this memory region again.
-  orig.registered_memory_region_ = {};
+  orig.registered_memory_region_.reset({});
   memory_region_to_owner_linker_w->register_new_memory_region_for(memory_region, tracker_);
 }
 
