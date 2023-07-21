@@ -101,7 +101,7 @@ class locked_Graph : public ItemTemplate<Graph, GraphTracker>, public MemoryRegi
   void remove_array(std::shared_ptr<MemoryRegionOwnerTracker>&& array_tracker);
   void write_dot(std::ostream& os) const;
 
-  void initialize() override;
+  void initialize_item() override;
 
  private:
   void call_initialize_on_items() const;

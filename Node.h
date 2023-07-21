@@ -78,7 +78,7 @@ class locked_Node : public ItemTemplate<Node, NodeTracker>
     return tracker_->node_ptr();
   }
 
-  void initialize() override;
+  void initialize_item() override;
 
 #ifdef CWDEBUG
   void print_on(std::ostream& os) const;

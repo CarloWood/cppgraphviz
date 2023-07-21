@@ -156,7 +156,7 @@ void locked_Graph::remove_array(std::shared_ptr<MemoryRegionOwnerTracker>&& arra
       });
 }
 
-void locked_Graph::initialize()
+void locked_Graph::initialize_item()
 {
   // Add the attributes of this Node.
   item_attributes(dot::GraphPtr::unlocked_type::wat{tracker_->graph_ptr().item()}->attribute_list());
@@ -171,7 +171,7 @@ void locked_Graph::call_initialize_on_items() const
     if (node_tracker)
     {
       auto item_w = node_tracker->tracked_wat();
-      item_w->initialize();
+      item_w->initialize_item();
     }
   }
   for (std::weak_ptr<GraphTracker> const& weak_graph_tracker : graph_trackers_)
@@ -180,7 +180,7 @@ void locked_Graph::call_initialize_on_items() const
     if (graph_tracker)
     {
       auto item_w = graph_tracker->tracked_wat();
-      item_w->initialize();
+      item_w->initialize_item();
     }
   }
   for (std::weak_ptr<MemoryRegionOwnerTracker> const& weak_array_tracker : array_trackers_)

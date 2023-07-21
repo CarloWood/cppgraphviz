@@ -91,7 +91,7 @@ class Item
 
   std::weak_ptr<GraphTracker> const& root_graph_tracker() const { return root_graph_tracker_; }
 
-  virtual void initialize() = 0;
+  virtual void initialize_item() = 0;
 
  protected:
   virtual void item_attributes(dot::AttributeList& list) { }

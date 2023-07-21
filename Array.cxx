@@ -142,7 +142,7 @@ void ArrayMemoryRegionOwner::call_initialize_on_elements()
     auto node_tracker = id_to_node_map_[index].lock();
     ++index;
     if (node_tracker)
-      node_tracker->tracked_wat()->initialize();
+      node_tracker->tracked_wat()->initialize_item();
   });
 }
 

@@ -76,7 +76,7 @@ locked_Node::~locked_Node()
     parent_graph_tracker->tracked_wat()->remove_node(std::move(tracker_));
 }
 
-void locked_Node::initialize()
+void locked_Node::initialize_item()
 {
   // Add the attributes of this locked_Node.
   item_attributes(dot::NodePtr::unlocked_type::wat{tracker_->node_ptr().item()}->attribute_list());

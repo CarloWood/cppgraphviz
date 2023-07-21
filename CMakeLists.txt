@@ -56,6 +56,8 @@ target_sources(cppgraphviz_ObjLib
   PRIVATE
     Array.cxx
     Array.h
+    Vector.cxx
+    Vector.h
     Graph.cxx
     Graph.h
     IndexedContainerSet.cxx
