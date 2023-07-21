@@ -189,7 +189,7 @@ void locked_Graph::call_initialize_on_items() const
     if (array_tracker)
     {
       MemoryRegionOwner& memory_region_owner = array_tracker->tracked_object();
-      ArrayMemoryRegionOwner& array_memory_region_owner = static_cast<ArrayMemoryRegionOwner&>(memory_region_owner);
+      IndexedContainerMemoryRegionOwner& array_memory_region_owner = static_cast<IndexedContainerMemoryRegionOwner&>(memory_region_owner);
       array_memory_region_owner.call_initialize_on_elements();
     }
   }
