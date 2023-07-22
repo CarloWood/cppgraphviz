@@ -104,7 +104,8 @@ IndexedContainerMemoryRegionOwner::IndexedContainerMemoryRegionOwner(threadsafe:
   table_node_ptr_(std::move(orig->table_node_ptr_)), id_to_node_map_(std::move(orig->id_to_node_map_))
 {
   DoutEntering(dc::notice,
-      "IndexedContainerMemoryRegionOwner::IndexedContainerMemoryRegionOwner(IndexedContainerMemoryRegionOwner&& " << orig.operator->() << ", " << (void*)begin);
+      "IndexedContainerMemoryRegionOwner(IndexedContainerMemoryRegionOwner&& " << orig.operator->() << ", " <<
+      (void*)begin << ", \"" << what << "\") [" << this << "]");
 }
 
 void IndexedContainerMemoryRegionOwner::on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr)

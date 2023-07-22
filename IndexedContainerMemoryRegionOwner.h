@@ -33,7 +33,8 @@ class IndexedContainerMemoryRegionOwner : public MemoryRegionOwner, public Label
   IndexedContainerMemoryRegionOwner(threadsafe::LockFinalCopy<IndexedContainerMemoryRegionOwner> other,
       char* begin, std::type_info const& index_type_info, std::string_view what);
 
-  IndexedContainerMemoryRegionOwner(threadsafe::LockFinalMove<IndexedContainerMemoryRegionOwner> other, char* begin, std::string_view what);
+  IndexedContainerMemoryRegionOwner(threadsafe::LockFinalMove<IndexedContainerMemoryRegionOwner> other,
+      char* begin, std::string_view what);
 
   void call_initialize_on_elements();
 

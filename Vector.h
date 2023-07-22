@@ -48,12 +48,13 @@ class VectorMemoryRegionOwner : public MemoryRegionOwner, public LabelNode
   static index_container_sets_t index_container_sets_;
 
  public:
-  VectorMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what);
+  VectorMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph,
+      std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what);
 
   void register_new_memory_region(MemoryRegion memory_region);
   void unregister_memory_region(MemoryRegion memory_region);
 
- protected:
+ private:
   void initialize(std::type_info const& index_type_info, std::string const& demangled_index_type_name);
 
  private:
@@ -69,9 +70,8 @@ class Vector : public VectorMemoryRegionOwner, public utils::Vector<T, _Index, s
   using _Base = utils::Vector<T, _Index, std::pmr::polymorphic_allocator<T>>;
 
   Vector(std::weak_ptr<GraphTracker> const& root_graph, std::initializer_list<T> ilist, std::string_view what) :
-    VectorMemoryRegionOwner(root_graph, what), _Base(ilist, &allocater_)
+    VectorMemoryRegionOwner(root_graph, typeid(_Index), get_index_label<_Index>(), what), _Base(ilist, &allocater_)
   {
-    initialize(typeid(_Index), get_index_label<_Index>());
   }
 
  private:
@@ -82,7 +82,7 @@ class Vector : public VectorMemoryRegionOwner, public utils::Vector<T, _Index, s
 
 #ifdef CWDEBUG
  public:
-  void print_on(std::ostream& os) const
+  void print_on(std::ostream& os) const override
   {
     os << *static_cast<_Base const*>(this);
   }

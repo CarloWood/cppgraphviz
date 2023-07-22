@@ -25,10 +25,13 @@ void TrackingAllocator::do_deallocate(void* ptr, std::size_t bytes, std::size_t 
 // Defined here because it can't be defined in (the header of) MemoryRegionOwner.
 using memory_region_to_owner_linker_type = MemoryRegionToOwnerLinkerSingleton::linker_type;
 
-VectorMemoryRegionOwner::VectorMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph, std::string_view what) :
+VectorMemoryRegionOwner::VectorMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph,
+    std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what) :
   LabelNode(root_graph, what), allocater_(this)
 {
-  DoutEntering(dc::notice, "VectorMemoryRegionOwner(" << root_graph << ", \"" << what << "\")");
+  DoutEntering(dc::notice, "VectorMemoryRegionOwner(" << root_graph <<
+      ", index_type_info, \"" << demangled_index_type_name << "\", \"" << what << "\")");
+  initialize(index_type_info, demangled_index_type_name);
 }
 
 void VectorMemoryRegionOwner::initialize(std::type_info const& index_type_info, std::string const& demangled_index_type_name)
@@ -42,7 +45,7 @@ void VectorMemoryRegionOwner::initialize(std::type_info const& index_type_info, 
           dot::NodePtr node_ptr;
           dot::NodePtr::unlocked_type::wat{node_ptr.item()}->add_attribute({"what", "default NodePtr for Vector"});
           return node_ptr;
-        }, number_of_elements());
+        }, 0);
   }
 
   std::shared_ptr<GraphTracker> root_graph_tracker = root_graph_tracker_.lock();

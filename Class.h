@@ -39,7 +39,7 @@ class Class : public Graph
     DoutEntering(dc::notice, "Class<" << libcwd::type_info_of<T>().demangled_name() << ">(Class&& " <<
         &other << ", \"" << what << "\") [" << this << "]");
   }
-  Class(Class&& other, std::string_view what) : Class(threadsafe::LockFinalMove<Class>{std::move(other)}, what) { }
+  Class(Class&& other, std::string_view what) : Class(std::move(other), what) { }
 
  public:
   void set_label(std::string const& label)
