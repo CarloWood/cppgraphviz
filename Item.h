@@ -50,24 +50,49 @@ class Item
     extract_root_graph();
   }
 
-  // This is used by Node when it must be added to root_graph.
   // Only if object is a NodeItem/NodeTracker, node_ptr_ptr will be set, otherwise it is nullptr.
-  Item(std::weak_ptr<GraphTracker> const& root_graph_tracker, Item* object, dot::NodePtr* node_ptr_ptr = nullptr) :
-    root_graph_tracker_(root_graph_tracker)
+  // root_graph_tracker might or might not be null.
+  //
+  //                   root_graph   parent_graph
+  // Item i1;            null         null
+  // Item i2(g0);          g0           g0
+  // Item i3(i1);        null         null
+  // Item i4(i2);          g0           g0
+  // Elements of containers should always have parent_graph set to null.
+  // cppgraphviz::Array<Item, N, Index> array1(g0,
+  //     { ... });         g0         null
+  Item(std::weak_ptr<GraphTracker> const& root_graph_tracker, Item* object, dot::NodePtr* node_ptr_ptr = nullptr)
   {
-    // Take the read-lock on the singleton.
-    memory_region_to_owner_linker_type::rat memory_region_to_owner_linker_r(MemoryRegionToOwnerLinkerSingleton::instance().linker_);
-    // This call sets parent_graph_tracker_ if object is found in a registered memory region
-    // (i.e. an indexed container that is added to the root graph).
-    memory_region_to_owner_linker_r->inform_owner_of(object, node_ptr_ptr);
-    // If object does not fall into a registered memory region, then it has to be added to the root graph.
-    if (parent_graph_tracker_.use_count() == 0)
-      parent_graph_tracker_ = root_graph_tracker;
-
-    if (root_graph_tracker_.use_count() == 0 && parent_graph_tracker_.use_count() > 0)
+    bool inside_memory_region;
     {
-      // The root graph is still unknown, but now we just initialized the member of a class.
-      extract_root_graph();
+      // Take the read-lock on the singleton.
+      memory_region_to_owner_linker_type::rat memory_region_to_owner_linker_r(MemoryRegionToOwnerLinkerSingleton::instance().linker_);
+      // This call sets parent_graph_tracker_ if object is found in a registered memory region
+      // (i.e. an indexed container that is added to the root graph).
+      inside_memory_region = memory_region_to_owner_linker_r->inform_owner_of(object, node_ptr_ptr);
+    }
+
+    // A successful match with a memory region should set at least one of root_graph_tracker_ or parent_graph_tracker_.
+    ASSERT(!inside_memory_region || root_graph_tracker_.use_count() > 0 || parent_graph_tracker_.use_count() > 0);
+
+    // If the root graph wasn't set by inform_owner_of, then set it to whatever was passed to this function (if anything).
+    if (root_graph_tracker_.use_count() == 0)
+      root_graph_tracker_ = root_graph_tracker;
+
+    if (inside_memory_region)
+    {
+      // If the root_graph_tracker_ is still not set, because root_graph_tracker is empty,
+      // but the parent_graph_tracker_ was set by now, then extract the root graph from the parent.
+      if (root_graph_tracker_.use_count() == 0)
+      {
+        // The root graph is still unknown, but now we just initialized the member of a class.
+        extract_root_graph();
+      }
+    }
+    else
+    {
+      // If object does not fall into a registered memory region, then it has to be added to the root graph.
+      parent_graph_tracker_ = root_graph_tracker_;
     }
   }
 

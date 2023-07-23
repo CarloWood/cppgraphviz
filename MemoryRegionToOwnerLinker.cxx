@@ -28,13 +28,14 @@ std::weak_ptr<MemoryRegionOwnerTracker> const& MemoryRegionToOwner::get_memory_r
   return default_memory_region_owner_tracker;
 }
 
-void MemoryRegionToOwner::inform_owner(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr) const
+bool MemoryRegionToOwner::inform_owner(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr) const
 {
   auto memory_region_owner_tracker = memory_region_owner_tracker_.lock();
-  if (memory_region_owner_tracker)
-  {
-    memory_region_owner_tracker->tracked_object().on_memory_region_usage(item_memory_region, node_ptr_ptr);
-  }
+  if (!memory_region_owner_tracker)
+    return false;
+
+  memory_region_owner_tracker->tracked_object().on_memory_region_usage(item_memory_region, node_ptr_ptr);
+  return true;
 }
 
 #ifdef CWDEBUG
@@ -77,23 +78,23 @@ bool MemoryRegionToOwnerLinker::erase_memory_region_to_owner(MemoryRegion const&
   return true;
 }
 
-void MemoryRegionToOwnerLinker::inform_owner_of(Item* item, dot::NodePtr* node_ptr_ptr) const
+bool MemoryRegionToOwnerLinker::inform_owner_of(Item* item, dot::NodePtr* node_ptr_ptr) const
 {
   DoutEntering(dc::notice, "MemoryRegionToOwnerLinker::inform_owner_of(" << item << ", " << node_ptr_ptr << ")");
 
   MemoryRegion item_memory_region(reinterpret_cast<char*>(item), sizeof(Item));
   auto iter = memory_region_to_owner_map_.find(item_memory_region);
 
-  // This can happen for example when creating a temporary in the constructor of a class;
-  // we just don't add those to any graph at all until they are moved (or copied) into
-  // a memory region that belongs to a managed Class or Array.
+  // This can also happen when creating a temporary in the constructor of a class;
+  // in that case we don't add item to any graph until they are moved (or copied) into
+  // a memory region that belongs to a managed Class or Array, later on.
   if (iter == memory_region_to_owner_map_.end())
-    return;
+    return false;
 
-  iter->second.inform_owner_of(iter->first, item_memory_region, node_ptr_ptr);
+  return iter->second.inform_owner_of(iter->first, item_memory_region, node_ptr_ptr);
 }
 
-void MemoryRegionToOwnerLinker::inform_owner_of(
+bool MemoryRegionToOwnerLinker::inform_owner_of(
     MemoryRegionToOwner const& default_owner, MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr) const
 {
   DoutEntering(dc::notice,
@@ -101,14 +102,14 @@ void MemoryRegionToOwnerLinker::inform_owner_of(
 
   auto iter = memory_region_to_owner_map_.find(item_memory_region);
 
-  if (iter == memory_region_to_owner_map_.end())
+  if (iter == memory_region_to_owner_map_.end() ||
+      !iter->second.inform_owner_of(iter->first, item_memory_region, node_ptr_ptr))
   {
     Dout(dc::notice, "not found; using: " << default_owner);
-    default_owner.inform_owner(item_memory_region, node_ptr_ptr);
-    return;
+    return default_owner.inform_owner(item_memory_region, node_ptr_ptr);
   }
 
-  iter->second.inform_owner_of(iter->first, item_memory_region, node_ptr_ptr);
+  return true;
 }
 
 void MemoryRegionToOwnerLinker::register_new_memory_region_for(MemoryRegion memory_region, std::weak_ptr<MemoryRegionOwnerTracker> const& owner)

@@ -14,7 +14,8 @@ class Array : public IndexedContainerMemoryRegionOwner, public utils::Array<T, N
 {
  public:
   constexpr Array(std::weak_ptr<GraphTracker> const& root_graph, std::initializer_list<T> ilist, std::string_view what) :
-    IndexedContainerMemoryRegionOwner(root_graph, reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),
+    IndexedContainerMemoryRegionOwner(root_graph,
+        reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),
         sizeof(T), N, typeid(_Index), get_index_label<_Index>(), what),
     utils::Array<T, N, _Index>(ilist)
   {

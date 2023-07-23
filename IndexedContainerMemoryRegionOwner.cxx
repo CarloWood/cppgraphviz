@@ -67,8 +67,8 @@ IndexedContainerMemoryRegionOwner::IndexedContainerMemoryRegionOwner(threadsafe:
   begin_(begin), element_size_(other->element_size_), number_of_elements_(other->number_of_elements_),
   id_to_node_map_(number_of_elements_)
 {
-  DoutEntering(dc::notice, "IndexedContainerMemoryRegionOwner::IndexedContainerMemoryRegionOwner(IndexedContainerMemoryRegionOwner const& " << other.operator->() << ", " <<
-      (void*)begin << ", index_type_info, \"" << what << "\")");
+  DoutEntering(dc::notice, "IndexedContainerMemoryRegionOwner::IndexedContainerMemoryRegionOwner(IndexedContainerMemoryRegionOwner const& " <<
+      other.operator->() << ", " << (void*)begin << ", index_type_info, \"" << what << "\")");
 
   {
     dot::TableNodePtr::unlocked_type::wat table_node_w{table_node_ptr_.item()};
