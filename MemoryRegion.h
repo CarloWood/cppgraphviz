@@ -21,6 +21,13 @@ class MemoryRegion
   // external synchronization of all MemoryRegion objects. This way we know we don't need that.
   MemoryRegion& operator=(MemoryRegion const&) = delete;
 
+  // However, if you are sure that this external synchronization is there, then one can use this function.
+  void critical_area_assign(MemoryRegion const& other)
+  {
+    begin_ = other.begin_;
+    end_ = other.end_;
+  }
+
   // However, when a MemoryRegionOwner is moved, its registered_memory_region_ is reset.
   // This is ok because being moved implies external synchronization.
   void reset(utils::Badge<MemoryRegionOwner>)

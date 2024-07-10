@@ -106,7 +106,8 @@ class locked_Graph : public ItemTemplate<Graph, GraphTracker>, public MemoryRegi
  private:
   void call_initialize_on_items() const;
 
-  void on_memory_region_usage(MemoryRegion const& UNUSED_ARG(item_memory_region), dot::NodePtr* UNUSED_ARG(node_ptr_ptr)) override
+  void on_memory_region_usage(MemoryRegion const& UNUSED_ARG(owner_memory_region),
+      MemoryRegion const& UNUSED_ARG(item_memory_region), dot::NodePtr* UNUSED_ARG(node_ptr_ptr)) override
   {
     // It should only be possible that this function is called if a class derived from Graph
     // registered a memory region (for example, Class). That derived class must override this

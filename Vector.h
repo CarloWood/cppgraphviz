@@ -1,9 +1,9 @@
 #pragma once
 
 #include "LabelNode.h"
-#include "MemoryRegionOwner.h"
 #include "get_index_label.h"
 #include "IndexedContainerSet.h"
+#include "IndexedContainerMemoryRegionOwner.h"
 #include "dot/TableNode.h"
 #include "utils/Vector.h"
 #include "utils/has_print_on.h"
@@ -17,15 +17,13 @@
 namespace cppgraphviz {
 using utils::has_print_on::operator<<;
 
-class VectorMemoryRegionOwner;
-
 class TrackingAllocator : public std::pmr::memory_resource
 {
  private:
-  VectorMemoryRegionOwner* owner_;
+  IndexedContainerMemoryRegionOwner* owner_;
 
  public:
-  TrackingAllocator(VectorMemoryRegionOwner* owner) : owner_(owner) { }
+  TrackingAllocator(IndexedContainerMemoryRegionOwner* owner) : owner_(owner) { }
 
  protected:
   void* do_allocate(std::size_t bytes, std::size_t alignment) override;
@@ -37,30 +35,29 @@ class TrackingAllocator : public std::pmr::memory_resource
   }
 };
 
-class VectorMemoryRegionOwner : public MemoryRegionOwner, public LabelNode
+class VectorMemoryRegionOwner : public IndexedContainerMemoryRegionOwner
 {
- protected:
-  TrackingAllocator allocater_;
-  dot::TableNodePtr table_node_ptr_;
-  std::vector<std::weak_ptr<NodeTracker>> id_to_node_map_; // A map of vector index to the tracker of the associated Node.
-  using index_container_sets_container_type = std::map<uint64_t, IndexedContainerSet>;
-  using index_container_sets_t = threadsafe::Unlocked<index_container_sets_container_type, threadsafe::policy::Primitive<std::mutex>>;
-  static index_container_sets_t index_container_sets_;
-
  public:
-  VectorMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph,
-      std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what);
+  using get_begin_type = IndexedContainerMemoryRegionOwner::get_begin_type;
+  using get_number_of_elements_type = IndexedContainerMemoryRegionOwner::get_number_of_elements_type;
 
-  void register_new_memory_region(MemoryRegion memory_region);
-  void unregister_memory_region(MemoryRegion memory_region);
+ protected:
+  TrackingAllocator allocator_;
 
- private:
-  void initialize(std::type_info const& index_type_info, std::string const& demangled_index_type_name);
+ protected:
+  VectorMemoryRegionOwner(std::weak_ptr<GraphTracker> const& root_graph, size_t element_size, size_t number_of_elements,
+      get_begin_type get_begin,
+      std::type_info const& index_type_info, std::string const& demangled_index_type_name, std::string_view what) :
+    IndexedContainerMemoryRegionOwner(root_graph, element_size, number_of_elements, get_begin,
+        index_type_info, demangled_index_type_name, what), allocator_(this) { }
 
- private:
-  void on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* node_ptr_ptr) override;
+  VectorMemoryRegionOwner(threadsafe::LockFinalCopy<IndexedContainerMemoryRegionOwner> other,
+      std::type_info const& index_type_info, std::string_view what) :
+    IndexedContainerMemoryRegionOwner(other, index_type_info, what), allocator_(this) { }
 
-  virtual size_t number_of_elements() const = 0;
+  VectorMemoryRegionOwner(threadsafe::LockFinalMove<IndexedContainerMemoryRegionOwner> other,
+      std::string_view what) :
+    IndexedContainerMemoryRegionOwner(other, what), allocator_(this) { }
 };
 
 template <typename T, typename _Index = utils::VectorIndex<T>>
@@ -69,16 +66,70 @@ class Vector : public VectorMemoryRegionOwner, public utils::Vector<T, _Index, s
  public:
   using _Base = utils::Vector<T, _Index, std::pmr::polymorphic_allocator<T>>;
 
-  Vector(std::weak_ptr<GraphTracker> const& root_graph, std::initializer_list<T> ilist, std::string_view what) :
-    VectorMemoryRegionOwner(root_graph, typeid(_Index), get_index_label<_Index>(), what), _Base(ilist, &allocater_)
+  static char const* get_begin(IndexedContainerMemoryRegionOwner const* self)
   {
+    DoutEntering(dc::notice, "cppgraphviz::Vector<" <<
+        NAMESPACE_DEBUG::type_name_of<T>() << ", " << NAMESPACE_DEBUG::type_name_of<_Index>() << ">::get_begin(" << (void*)self << ")");
+    Vector const* this_ = static_cast<Vector const*>(self);
+    char const* data = reinterpret_cast<char const*>(this_->utils::Vector<T, _Index, std::pmr::polymorphic_allocator<T>>::data());
+    Dout(dc::notice, "data = " << (void*)data << " [" << this_ << "]");
+    return data;
   }
 
- private:
-  size_t number_of_elements() const override
+  static size_t get_number_of_elements(IndexedContainerMemoryRegionOwner const* self)
   {
-    return _Base::size();
+    DoutEntering(dc::notice, "cppgraphviz::Vector<" <<
+        NAMESPACE_DEBUG::type_name_of<T>() << ", " << NAMESPACE_DEBUG::type_name_of<_Index>() << ">::get_number_of_elements(" <<
+        (void*)self << ")");
+    Vector const* this_ = static_cast<Vector const*>(self);
+    size_t size = this_->utils::Vector<T, _Index, std::pmr::polymorphic_allocator<T>>::size();
+    Dout(dc::notice, "size = " << size << " [" << this_ << "]");
+    return size;
   }
+
+  Vector(std::weak_ptr<GraphTracker> const& root_graph, std::initializer_list<T> ilist, std::string_view what) :
+    VectorMemoryRegionOwner(root_graph, sizeof(T), ilist.size(),
+        &Vector::get_begin,
+        typeid(_Index), get_index_label<_Index>(), what),
+    _Base(ilist, &allocator_)
+  {
+    // Now that the utils::Vector is initialized set this function pointer, so that
+    // future calls to IndexedContainerMemoryRegionOwner::on_memory_region_usage will
+    // get the correct value instead of the initial size.
+    get_number_of_elements_ = &Vector::get_number_of_elements;
+  }
+
+  Vector(Vector const& other, std::string_view what) :
+    VectorMemoryRegionOwner(other, typeid(_Index), what),
+    _Base(other, &allocator_)
+  {
+    get_number_of_elements_ = &Vector::get_number_of_elements;
+  }
+
+#ifdef CPPGRAPHVIZ_USE_WHAT
+  Vector(Vector const& other) :
+    VectorMemoryRegionOwner(other, typeid(_Index), "Vector(Vector const&) of " + other.get_what()),
+    _Base(other, &allocator_)
+  {
+    get_number_of_elements_ = &Vector::get_number_of_elements;
+  }
+#endif
+
+  Vector(Vector&& other, std::string_view what) :
+    VectorMemoryRegionOwner(std::move(other), what),
+    _Base(std::move(other), &allocator_)
+  {
+    get_number_of_elements_ = &Vector::get_number_of_elements;
+  }
+
+#ifdef CPPGRAPHVIZ_USE_WHAT
+  Vector(Vector&& other) :
+    VectorMemoryRegionOwner(std::move(other), "Vector(Vector&&) of " + other.get_what()),
+    _Base(std::move(other), &allocator_)
+  {
+    get_number_of_elements_ = &Vector::get_number_of_elements;
+  }
+#endif
 
 #ifdef CWDEBUG
  public:

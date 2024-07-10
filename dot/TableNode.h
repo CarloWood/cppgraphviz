@@ -71,6 +71,12 @@ class TableNodeItem : public Item
     copied_elements_[index] = node_ptr;
   }
 
+  void resize_copied_elements(size_t new_size, dot::NodePtr const& node_ptr)
+  {
+    dot::NodePtr non_const_node_ptr(node_ptr);
+    copied_elements_.resize(new_size, dot::TableElement{non_const_node_ptr});
+  }
+
   void write_html_to(std::ostream& os, std::string const& indentation) const;
 
   Port at(size_t index) const

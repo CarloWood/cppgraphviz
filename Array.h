@@ -30,14 +30,10 @@ class Array : public IndexedContainerMemoryRegionOwner, public utils::Array<T, N
   }
 
   Array(Array const& other, std::string_view what) :
-    IndexedContainerMemoryRegionOwner(other, reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)), typeid(_Index), what),
+    IndexedContainerMemoryRegionOwner(other,
+        reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),
+        typeid(_Index), what),
     utils::Array<T, N, _Index>(other)
-  {
-  }
-
-  Array(Array&& other, std::string_view what) :
-    IndexedContainerMemoryRegionOwner(std::move(other), reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)), what),
-    utils::Array<T, N, _Index>(std::move(other))
   {
   }
 
@@ -49,7 +45,17 @@ class Array : public IndexedContainerMemoryRegionOwner, public utils::Array<T, N
     utils::Array<T, N, _Index>(other)
   {
   }
+#endif
 
+  Array(Array&& other, std::string_view what) :
+    IndexedContainerMemoryRegionOwner(std::move(other),
+        reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),
+        what),
+    utils::Array<T, N, _Index>(std::move(other))
+  {
+  }
+
+#ifdef CPPGRAPHVIZ_USE_WHAT
   Array(Array&& other) :
     IndexedContainerMemoryRegionOwner(std::move(other),
         reinterpret_cast<char*>(static_cast<std::array<T, N>*>(this)),

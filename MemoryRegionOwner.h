@@ -27,7 +27,10 @@ class MemoryRegionOwner : public utils::TrackedObject<MemoryRegionOwnerTracker>
   ~MemoryRegionOwner();
 
  public:
-  virtual void on_memory_region_usage(MemoryRegion const& used, dot::NodePtr* node_ptr_ptr) = 0;
+  virtual void on_memory_region_usage(MemoryRegion const& owner_memory_region, MemoryRegion const& used, dot::NodePtr* node_ptr_ptr) = 0;
+
+  void register_new_memory_region(MemoryRegion memory_region);
+  static void unregister_memory_region(MemoryRegion memory_region);
 
 #ifdef CWDEBUG
  public:

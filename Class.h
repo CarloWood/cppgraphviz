@@ -49,7 +49,7 @@ class Class : public Graph
 
  private:
   // Implement virtual function of MemoryRegionOwner.
-  void on_memory_region_usage(MemoryRegion const& item_memory_region, dot::NodePtr* UNUSED_ARG(node_ptr_ptr)) override
+  void on_memory_region_usage(MemoryRegion const& UNUSED_ARG(owner_memory_region), MemoryRegion const& item_memory_region, dot::NodePtr* UNUSED_ARG(node_ptr_ptr)) override
   {
     // `item_memory_region` starts at the `Item* object` that was passed to inform_owner_of in the constructor of some Item.
     Item* item = reinterpret_cast<Item*>(item_memory_region.begin());

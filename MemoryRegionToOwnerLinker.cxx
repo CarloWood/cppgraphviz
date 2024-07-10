@@ -34,7 +34,7 @@ bool MemoryRegionToOwner::inform_owner(MemoryRegion const& item_memory_region, d
   if (!memory_region_owner_tracker)
     return false;
 
-  memory_region_owner_tracker->tracked_object().on_memory_region_usage(item_memory_region, node_ptr_ptr);
+  memory_region_owner_tracker->tracked_object().on_memory_region_usage(memory_region_, item_memory_region, node_ptr_ptr);
   return true;
 }
 

@@ -97,7 +97,13 @@ class Item
   }
 
   Item(Item&& other) :
-    root_graph_tracker_(std::move(other.root_graph_tracker_)), parent_graph_tracker_(std::move(other.parent_graph_tracker_)) { }
+    root_graph_tracker_(std::move(other.root_graph_tracker_)), parent_graph_tracker_(std::move(other.parent_graph_tracker_))
+  {
+    // Take the read-lock on the singleton.
+    memory_region_to_owner_linker_type::rat memory_region_to_owner_linker_r(MemoryRegionToOwnerLinkerSingleton::instance().linker_);
+    memory_region_to_owner_linker_r->inform_owner_of(this);     // This sets parent_graph_tracker_.
+    extract_root_graph();
+  }
 
   // Accessors.
 
